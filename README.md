@@ -19,13 +19,25 @@ The app needs **anonymous sign-ins enabled** in the project's Authentication set
 
 The migration under `supabase/migrations/` creates the private tables and the transactional RPC API. Do not add the `private` schema to exposed API schemas. It stores host passwords as plaintext in a private table, as requested; clients cannot read that table or the answer keys.
 
-When ready, use an existing Supabase CLI login or set `SUPABASE_ACCESS_TOKEN` locally. A database password can be supplied through `SUPABASE_DB_PASSWORD`. Then:
+The sync script needs one **personal access token**, supplied through the process environment variable `PLOUF_SECRET_SUPABASE`. Create it at https://supabase.com/dashboard/account/tokens with access to this project's migrations (read/write) and Edge Functions (read/write). This is a deployment token, not the project's `sb_secret_` API key. No database password or CLI login is needed.
+
+For zsh, add this line to your private `~/.zshrc`:
+
+```sh
+export PLOUF_SECRET_SUPABASE='your_personal_access_token'
+```
+
+Then open a new terminal or run `source ~/.zshrc`. From the project folder:
 
 ```sh
 python3 sync_supabase.py
 ```
 
-The script uses `npx --yes supabase@2`, links the project, applies pending migrations, and deploys **all local Edge Functions**. It never invokes login, resets the database, or deletes remote functions. `--dry-run` prints the command plan without executing anything. It stops if a step fails. It does not push Auth configuration; enable anonymous sign-ins in the dashboard separately.
+The token is read only from the process environment, never from `.env.local`, command arguments or source files. Keep it out of the repository. Public app settings and the project reference can remain in `.env.local`.
+
+The script applies pending migrations through the Supabase Management API, then uses `npx --yes supabase@2 functions deploy --use-api` to deploy **all local Edge Functions**, without requiring Docker. It passes the same token to the CLI in memory as `SUPABASE_ACCESS_TOKEN`. It never invokes login, links the project, uses a database password, resets the database, or deletes remote functions. `--dry-run` shows the local plan without contacting Supabase or running commands. A failed migration stops function deployment. It does not push Auth configuration; enable anonymous sign-ins in the dashboard separately.
+
+API-applied migrations are named after their full local filename stem; Supabase assigns the remote migration timestamp. Subsequent syncs skip those names and also recognize older CLI-applied migrations by version. Keep using this script for migrations; switching back to `db push` requires reconciling API-assigned versions first. Applied migration files should remain unchanged; add a new migration for later changes. If a request times out, check remote migration history before retrying.
 
 The game uses database functions for transactional timing and scoring; `supabase/functions/health` is an additional deployable Edge Function. The supplied config enables anonymous auth for future local Supabase use.
 
