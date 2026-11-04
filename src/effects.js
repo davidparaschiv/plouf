@@ -108,7 +108,7 @@ export function reward(place) {
       targets: rocket,
       x: w + 55,
       y: h + 55,
-      duration: 1400,
+      duration: 2000,
       ease: "Cubic.In",
       onComplete: () => rocket.destroy(),
     });
@@ -124,9 +124,9 @@ export function reward(place) {
     scene.tweens.add({
       targets: bomb,
       alpha: 1,
-      duration: 400,
+      duration: 500,
       onComplete: () => {
-        scene.time.delayedCall(250, () => {
+        scene.time.delayedCall(400, () => {
           bomb.destroy();
           for (let i = 0; i < 28; i++) {
             const dot = scene.add.circle(
@@ -142,7 +142,7 @@ export function reward(place) {
               y: h / 2 + Math.sin(a) * 150,
               alpha: 0,
               scale: 0,
-              duration: 600,
+              duration: 1100,
               onComplete: () => dot.destroy(),
             });
           }
@@ -168,7 +168,7 @@ export function reward(place) {
     scene.tweens.add({
       targets: plane,
       x: -80,
-      duration: 1000,
+      duration: 2000,
       onComplete: () => plane.destroy(),
     });
   }

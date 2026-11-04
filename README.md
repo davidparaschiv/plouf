@@ -68,9 +68,11 @@ An example download is included in the host form. There is no application questi
 
 ## Artwork and mobile layout
 
-Ten transparent PNG portraits preload and decode before role selection. The original individual portrait designs are used, with backgrounds removed; the later composite atlas is not used. Character names appear only in the selection UI. Portraits always preserve their square aspect ratio. Waiting-room slots fit approximately 36–40 icons on a typical portrait phone, then overlap if full.
+All ten transparent PNG portraits, both role PNG icons, all six desktop/mobile theme backgrounds, and all five music tracks preload and decode before role selection. The original individual portrait designs are used, with backgrounds removed; the later composite atlas is not used. Character names appear only in the selection UI. Portraits always preserve their square aspect ratio. Waiting-room slots fit approximately 36–40 icons on a typical portrait phone, then overlap if full.
 
 The three original generated theme PNGs are copied unchanged into `public/assets/`. They are shown at 80% opacity over white and **stretched to the viewport, never cropped**. Portrait mobile screens select matching `*-mobile.png` compositions; desktop uses the untouched landscape originals. Phaser renders falling snow, drifting bubbles, forest glitter, answer rewards and final confetti above the UI without intercepting touches. Reduced-motion preferences suppress the animated effects.
+
+Five original instrumental tracks are included under `public/audio/`: a low-beat lobby track, Christmas bells, underwater marimba, fairy-forest flute/harp, and an upbeat podium track. The lobby track plays outside rooms, the room theme plays in the waiting room and throughout questions, and the podium track plays on the results screen. Songs have soft endings and repeat with exactly 1.75 seconds of added silence. Everything plays from decoded buffers without fetching again. The permanent top-right sound toggle starts enabled, and its muted state persists across screens during the visit. Browser autoplay restrictions mean playback starts after the first user interaction. `scripts/compose_music.py` is the optional reproducible composition source (NumPy and ffmpeg); it is not needed to build or run the website.
 
 Artwork was made with the built-in image generation tool. Prompts and the exact asset mapping are recorded in `public/assets/artwork.json`. The logo uses a handwritten mint-and-pink wordmark; display fonts load from Google Fonts with local fallbacks.
 

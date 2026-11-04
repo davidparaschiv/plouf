@@ -8,6 +8,22 @@ import {
 } from "./rules.js";
 import { rpc } from "./api.js";
 import { setAtmosphere, reward } from "./effects.js";
+import { RoomMusic, MUSIC_TRACKS } from "./music.js";
+const music = new RoomMusic();
+const audioToggle = document.querySelector("#audio-toggle");
+audioToggle.addEventListener("click", () => {
+  const enabled = music.toggle();
+  audioToggle.setAttribute("aria-pressed", String(!enabled));
+  audioToggle.setAttribute(
+    "aria-label",
+    enabled ? "Mute music" : "Unmute music",
+  );
+  audioToggle.title = enabled ? "Mute music" : "Unmute music";
+});
+document.addEventListener("pointerdown", () => music.unlock(), {
+  passive: true,
+});
+document.addEventListener("keydown", () => music.unlock());
 const app = document.querySelector("#app");
 const asset = (name) => `${import.meta.env.BASE_URL}assets/${name}`;
 const esc = (value) =>
@@ -54,6 +70,7 @@ function clearRoom() {
   document.body.classList.remove("themed", "podium");
   document.querySelector("#background").style.backgroundImage = "";
   setAtmosphere("");
+  music.setTrack("lobby");
 }
 function back() {
   return '<button class="back" data-action="home">← Back</button>';
@@ -61,7 +78,7 @@ function back() {
 function home() {
   clearRoom();
   currentView = "home";
-  app.innerHTML = `<section class="hero"><p class="eyebrow">Gather. Guess. Make a splash.</p><h1>A little spark.<br>A lot of <em>Plouf.</em></h1></section><section class="roles" aria-label="Choose your role"><button class="role" data-action="guest"><span class="symbol" aria-hidden="true">↗</span><strong>Guest</strong><small>Find your room. Jump in.</small><span class="arrow">↗</span></button><button class="role host" data-action="host"><span class="symbol" aria-hidden="true">✳</span><strong>Host</strong><small>Your questions. Your world.</small><span class="arrow">↗</span></button></section><p class="home-footer">A room full of friends. One place at the top.</p>`;
+  app.innerHTML = `<section class="hero"><p class="eyebrow">Gather. Guess. Make a splash.</p><h1>A little spark.<br>A lot of <em>Plouf.</em></h1></section><section class="roles" aria-label="Choose your role"><button class="role" data-action="guest"><span class="symbol" aria-hidden="true"><img src="${asset("role-guest.png")}" alt=""></span><strong>Guest</strong><small>Find your room. Jump in.</small><span class="arrow">↗</span></button><button class="role host" data-action="host"><span class="symbol" aria-hidden="true"><img src="${asset("role-host.png")}" alt=""></span><strong>Host</strong><small>Your questions. Your world.</small><span class="arrow">↗</span></button></section><p class="home-footer">A room full of friends. One place at the top.</p>`;
   if (roomId)
     app.querySelector(".hero").innerHTML =
       `<p class="eyebrow">${esc(roomId)}</p><h1>Come on <em>in.</em></h1><p class="muted">How are you joining?</p>`;
@@ -92,23 +109,42 @@ async function loadImage(src) {
 async function preload() {
   if (preloadPromise) return preloadPromise;
   app.innerHTML =
-    '<section class="loader"><h2>Getting everyone ready.</h2><div class="loader-track"><div class="loader-fill" style="width:0%"></div></div><p>Loading your characters…</p></section>';
+    '<section class="loader"><h2>Getting everyone ready.</h2><div class="loader-track" role="progressbar" aria-label="Loading room assets" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="loader-fill" style="width:0%"></div></div><p>Loading your worlds, characters & music…</p></section>';
+  const images = [
+    ...characters.map((_, i) => `character-${i}.png`),
+    ...themes.flatMap(({ id }) => [`${id}.png`, `${id}-mobile.png`]),
+    "role-guest.png",
+    "role-host.png",
+  ];
+  const total = images.length + MUSIC_TRACKS.length;
   let done = 0;
-  preloadPromise = Promise.all(
-    characters.map((_, i) =>
-      loadImage(asset(`character-${i}.png`)).then((img) => {
-        done++;
-        const fill = document.querySelector(".loader-fill");
-        if (fill) fill.style.width = `${done * 10}%`;
-        return img;
+  const loaded = () => {
+    const progress = Math.round((++done / total) * 100);
+    document
+      .querySelector(".loader-fill")
+      ?.style.setProperty("width", `${progress}%`);
+    document
+      .querySelector(".loader-track")
+      ?.setAttribute("aria-valuenow", progress);
+  };
+  // Keep decoded images and music in memory across room and orientation changes.
+  preloadPromise = Promise.all([
+    ...images.map((name) =>
+      loadImage(asset(name)).then((image) => {
+        loaded();
+        return image;
       }),
     ),
-  );
+    music.preload(
+      (track) => `${import.meta.env.BASE_URL}audio/${track}.mp3`,
+      loaded,
+    ),
+  ]);
   try {
     return await preloadPromise;
-  } catch (e) {
+  } catch {
     preloadPromise = null;
-    throw Error("Some characters could not load. Please try again.");
+    throw Error("Some room assets could not load. Please try again.");
   }
 }
 async function poll() {
@@ -157,6 +193,7 @@ function setWorld() {
     ? ""
     : `url("${themeFile(snapshot.theme)}")`;
   setAtmosphere(podium ? "confetti" : snapshot.theme);
+  music.setTrack(podium ? "podium" : snapshot.theme);
 }
 function renderRoom() {
   currentView = "room";
@@ -398,7 +435,6 @@ app.addEventListener("submit", async (e) => {
     url.searchParams.set("room", roomId);
     history.replaceState(null, "", url);
     await poll();
-    if (snapshot) await loadImage(themeFile(snapshot.theme));
   } catch (error) {
     if (errorEl.isConnected) {
       errorEl.textContent = error.message;

@@ -103,5 +103,17 @@
       "reference": "underwater.png",
       "source": "/Users/davidparaschiv/.codex/generated_images/01a1a857-e9f5-73f3-92fe-967346d9c3af/exec-5f081d87-6fca-49fe-81bd-67b2fba0481b.png"
     }
-  ]
+  ],
+  "role_icons": {
+    "tool": "Built-in image generation",
+    "guest": {
+      "file": "role-guest.png",
+      "prompt": "Use case: stylized-concept. Asset: polished mobile game Guest role icon for Plouf. A beautiful inviting translucent mint-green bubble portal with a small friendly pink fish-shaped splash leaping through it, three tiny water droplets and one luminous fairy sparkle. Premium tactile soft 3D clay and glossy glass materials, playful magical underwater theme, refined commercial game UI quality. Palette mint #a8efd4 with deep raspberry pink #a52761 accents, soft light edges, no dark background. One compact cohesive symbol readable at 80px. Centered square composition with 12 percent transparent padding. Truly transparent background, no words, letters, frame, or watermark."
+    },
+    "host": {
+      "file": "role-host.png",
+      "prompt": "Use case: stylized-concept. Asset: polished mobile game Host role icon for Plouf. A delightful raspberry-pink and mint-green magical quiz conductor's wand crossing a small floating glossy mint crown, with three elegant tiny luminous sparkles and one translucent bubble. Premium tactile soft 3D clay and glass materials, refined commercial game UI quality, charming enchanted fantasy atmosphere. Palette mint #a8efd4 with deep raspberry pink #a52761, subtle warm white highlights. One compact cohesive symbol readable at 80px. Centered square composition with 12 percent transparent padding. Truly transparent background, no words, letters, frame, or watermark.",
+      "edit": "Use case: precise-object-edit. Remove ONLY the glowing question mark from the pink star at the top of the wand. Fill its previous area with the same glossy raspberry-pink star material, matching adjacent shading and highlights seamlessly. Keep EVERYTHING ELSE exactly the same: wand shape, star silhouette, crown, ribbons, colors, jewel, bubbles, sparkles, proportions, composition, lighting and transparent alpha background. Do not replace the question mark with another symbol. No text. Preserve the existing transparency."
+    }
+  }
 }
