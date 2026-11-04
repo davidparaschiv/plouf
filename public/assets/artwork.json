@@ -1,0 +1,107 @@
+{
+  "tool": "Built-in image generation",
+  "characters": [
+    {
+      "name": "Panda",
+      "file": "character-0.png",
+      "source": "/Users/davidparaschiv/.codex/generated_images/01a1a857-e9f5-73f3-92fe-967346d9c3af/exec-e1005aa6-9312-4588-a9bf-47260c10517c.png",
+      "brief": "Original individual polished 3D clay portrait, background removed without redesigning the character."
+    },
+    {
+      "name": "Zebra",
+      "file": "character-1.png",
+      "source": "/Users/davidparaschiv/.codex/generated_images/01a1a857-e9f5-73f3-92fe-967346d9c3af/exec-7cf0b3b4-89c6-4884-bc77-93e06809bb14.png",
+      "brief": "Original individual polished 3D clay portrait, background removed without redesigning the character."
+    },
+    {
+      "name": "Rabbit",
+      "file": "character-2.png",
+      "source": "/Users/davidparaschiv/.codex/generated_images/01a1a857-e9f5-73f3-92fe-967346d9c3af/exec-442a3f2a-38fa-4fd4-8830-0715b94ead07.png",
+      "brief": "Original individual polished 3D clay portrait, background removed without redesigning the character."
+    },
+    {
+      "name": "Stag",
+      "file": "character-3.png",
+      "source": "/Users/davidparaschiv/.codex/generated_images/01a1a857-e9f5-73f3-92fe-967346d9c3af/exec-636cd0d3-15ec-498c-9238-bdbb2c827a97.png",
+      "brief": "Original individual polished 3D clay portrait, background removed without redesigning the character."
+    },
+    {
+      "name": "Tiger",
+      "file": "character-4.png",
+      "source": "/Users/davidparaschiv/.codex/generated_images/01a1a857-e9f5-73f3-92fe-967346d9c3af/exec-d8215a38-cc37-4a25-96be-09afaa158b82.png",
+      "brief": "Original individual polished 3D clay portrait, background removed without redesigning the character."
+    },
+    {
+      "name": "Giraffe",
+      "file": "character-5.png",
+      "source": "/Users/davidparaschiv/.codex/generated_images/01a1a857-e9f5-73f3-92fe-967346d9c3af/exec-43ae1c17-b113-480d-a8f3-0487fea72469.png",
+      "brief": "Original individual polished 3D clay portrait, background removed without redesigning the character."
+    },
+    {
+      "name": "Monkey",
+      "file": "character-6.png",
+      "source": "/Users/davidparaschiv/.codex/generated_images/01a1a857-e9f5-73f3-92fe-967346d9c3af/exec-1e5e33bb-9ae5-4534-897e-3660ae2daddd.png",
+      "brief": "Original individual polished 3D clay portrait, background removed without redesigning the character."
+    },
+    {
+      "name": "Siren",
+      "file": "character-7.png",
+      "source": "/Users/davidparaschiv/.codex/generated_images/01a1a857-e9f5-73f3-92fe-967346d9c3af/exec-a0f126ad-df1d-4c1c-9da6-9c22ff549800.png",
+      "brief": "Original individual polished 3D clay portrait, background removed without redesigning the character."
+    },
+    {
+      "name": "Shark",
+      "file": "character-8.png",
+      "source": "/Users/davidparaschiv/.codex/generated_images/01a1a857-e9f5-73f3-92fe-967346d9c3af/exec-73929345-0596-4a5c-858f-07ab83a2678a.png",
+      "brief": "Original individual polished 3D clay portrait, background removed without redesigning the character."
+    },
+    {
+      "name": "Nemo",
+      "file": "character-9.png",
+      "source": "/Users/davidparaschiv/.codex/generated_images/01a1a857-e9f5-73f3-92fe-967346d9c3af/exec-2f1eb04e-4ac5-4bc3-a80b-3e050d9ae0b9.png",
+      "brief": "Original friendly orange-and-white clownfish, polished soft 3D clay style, transparent background."
+    }
+  ],
+  "themes": [
+    {
+      "file": "forest.png",
+      "source": "/Users/davidparaschiv/.codex/generated_images/01a1a857-e9f5-73f3-92fe-967346d9c3af/exec-2700d78b-d54b-4070-ae3b-fb234de271c9.png",
+      "unchanged": true
+    },
+    {
+      "file": "christmas.png",
+      "source": "/Users/davidparaschiv/.codex/generated_images/01a1a857-e9f5-73f3-92fe-967346d9c3af/exec-adb3d081-5cbc-4573-83b2-b88d2d5b2be4.png",
+      "unchanged": true
+    },
+    {
+      "file": "underwater.png",
+      "source": "/Users/davidparaschiv/.codex/generated_images/01a1a857-e9f5-73f3-92fe-967346d9c3af/exec-f7f55f7c-7cdc-4f79-abb1-844f134250ba.png",
+      "unchanged": true
+    }
+  ],
+  "prompts": {
+    "portrait": "One centered head-and-shoulders animal portrait, polished soft 3D clay illustration, expressive kind face, recognizable silhouette at 48px, mint pale background, soft studio lighting, no text or border.",
+    "extraction": "Edit ONLY the background to actual alpha transparency. Preserve this exact original character face, expression, materials, clothing, colors, lighting, framing and proportions. Do not redraw or restyle.",
+    "forest": "Enchanted magical forest with many tiny glowing friendly fairies, luminous flowers, ancient trees, mint green and gentle rose accents, dreamy polished storybook 3D illustration, wide environmental background, open calm center, no text.",
+    "christmas": "Christmas woodland village, snow covered fir trees, warm golden window lights, ornaments, mint and pink accents, dreamy polished storybook 3D illustration, calm light center, no text.",
+    "underwater": "Underwater world with translucent bubbles, coral, colorful fish and a friendly shark, mint turquoise water and pink coral, dreamy polished storybook 3D illustration, open calm center, no text.",
+    "mobile": "Edit the original landscape into a 9:16 portrait composition. Preserve the exact visual style, intricate materials and recognizable elements, moving existing objects together without squeezing them. Magical forest revision preserves detailed bark, translucent fairy wings, dimensional faces and petals, roses, lilies, bridges, gazebo, reflective stream and golden light."
+  },
+  "mobile_themes": [
+    {
+      "file": "forest-mobile.png",
+      "reference": "forest.png",
+      "source": "/Users/davidparaschiv/.codex/generated_images/01a1a857-e9f5-73f3-92fe-967346d9c3af/exec-55d1a364-721c-4528-832c-086ddedba097.png"
+    },
+    {
+      "file": "christmas-mobile.png",
+      "reference": "christmas.png",
+      "source": "/Users/davidparaschiv/.codex/generated_images/01a1a857-e9f5-73f3-92fe-967346d9c3af/exec-d1c68ca2-0001-4bab-842f-1c5d81407cc0.png"
+    },
+    {
+      "file": "underwater-mobile.png",
+      "reference": "underwater.png",
+      "source": "/Users/davidparaschiv/.codex/generated_images/01a1a857-e9f5-73f3-92fe-967346d9c3af/exec-5f081d87-6fca-49fe-81bd-67b2fba0481b.png"
+    }
+  ]
+}

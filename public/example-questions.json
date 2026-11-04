@@ -1,0 +1,5 @@
+[
+ {"Q":"Which planet is known as the Red Planet?","C":"Mars","W1":"Venus","W2":"Jupiter","W3":"Mercury"},
+ {"Q":"How many hearts does an octopus have?","C":"Three","W1":"One","W2":"Two","W3":"Eight"},
+ {"Q":"What gives plants their green color?","C":"Chlorophyll","W1":"Carotene","W2":"Melanin","W3":"Keratin"}
+]

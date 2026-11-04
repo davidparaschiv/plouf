@@ -1,0 +1,86 @@
+# Plouf
+
+A portrait-first quiz room built with HTML, CSS, JavaScript, Phaser 3 and Supabase. Static output runs on GitHub Pages at **plouf.space**.
+
+## Run locally
+
+```sh
+npm ci
+npm run dev
+```
+
+Open the printed local URL. Rooms use the configured Supabase project; apply the migration and enable anonymous sign-ins before creating or joining a live room.
+
+The supplied project URL and public key are in ignored `.env.local`. For another checkout, copy `.env.example` to `.env.local` and supply `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` and `SUPABASE_PROJECT_REF`. Never put a service-role key in a `VITE_` variable.
+
+## Supabase setup — not executed during implementation
+
+The app needs **anonymous sign-ins enabled** in the project's Authentication settings. Both hosts and guests get a persistent anonymous Supabase identity; no email or login form is needed. Keep that browser identity to retain access to a room. Hosts can also regain access on another device with the room password. Configure the Auth site URL as `https://plouf.space`.
+
+The migration under `supabase/migrations/` creates the private tables and the transactional RPC API. Do not add the `private` schema to exposed API schemas. It stores host passwords as plaintext in a private table, as requested; clients cannot read that table or the answer keys.
+
+When ready, use an existing Supabase CLI login or set `SUPABASE_ACCESS_TOKEN` locally. A database password can be supplied through `SUPABASE_DB_PASSWORD`. Then:
+
+```sh
+python3 sync_supabase.py
+```
+
+The script uses `npx --yes supabase@2`, links the project, applies pending migrations, and deploys **all local Edge Functions**. It never invokes login, resets the database, or deletes remote functions. `--dry-run` prints the command plan without executing anything. It stops if a step fails. It does not push Auth configuration; enable anonymous sign-ins in the dashboard separately.
+
+The game uses database functions for transactional timing and scoring; `supabase/functions/health` is an additional deployable Edge Function. The supplied config enables anonymous auth for future local Supabase use.
+
+## Questions
+
+Upload a JSON array. Order is preserved; each entry must contain five nonempty text fields and four distinct answers:
+
+```json
+[
+  {"Q":"What is the capital of France?","C":"Paris","W1":"Rome","W2":"Madrid","W3":"Berlin"}
+]
+```
+
+An example download is included in the host form. There is no application question-count minimum or maximum. An empty array is valid and Play moves straight to the final screen. Practical limits still include browser memory, HTTP request size, database integer capacity and the selected Supabase plan.
+
+## Room rules
+
+- IDs start at `PID-10020`, allocated by updating a single locked database counter row. Passwords require at least four characters and are masked in the UI.
+- New rooms have `started=false`, `playing=false`. **Start room** clears members, answers and scores, generates a new session ID, and opens the waiting room. Questions, theme, ID, password and host access remain.
+- **Play** atomically locks entry and starts a five-second countdown. It cannot run twice or before Start. New guests may join only while started and not playing. An existing member may reconnect without joining again.
+- Question order follows the JSON. Four answers are shuffled once on the server using PostgreSQL `pgcrypto` random bytes. Every client sees the same order. Only the current question and its answer texts are sent to clients; correctness stays in the database.
+- Every question has 15 seconds, ending early when every member has answered. Five seconds separate questions. The host sees disabled answers and does not participate. Disconnected guests still count as members; unanswered questions therefore finish at the deadline.
+- The first executable statement in `submit_answer` captures `clock_timestamp()` before validation or locks. The persisted timestamp includes submillisecond precision. Duplicate submissions are idempotent; old-session and old-question requests are rejected.
+- Correct-answer feedback positions are assigned under the room lock, in database acceptance order. Under exceptional concurrent scheduling this can differ from the order of timestamps captured before that lock. Final question points always use the captured elapsed times, with the fastest correct answer as the baseline: `round(1000 × fastest_correct_elapsed / player_elapsed)`. Wrong and missing answers earn zero. Elapsed times have a 1 ms floor to avoid dividing by zero. Exact score ties are ordered by join time, then member ID.
+- Waiting rooms poll every second. Active rooms poll every 500 ms; clocks display a shared server deadline with an estimated clock offset. Database transitions are advanced by authenticated snapshot requests, so no paid scheduler or always-running server is needed. Network conditions can cause visible transition delays; polling does not provide frame-perfect synchronization.
+- Between questions, first and last players occupy the arrow endpoints; an intermediate current player is exactly centered. Hosts see only the endpoints. Names here are player names, never character names.
+- At the end, both room flags become false. The top three get a gold, silver and bronze podium with points and confetti. Fewer than three players show only the occupied places.
+
+## Artwork and mobile layout
+
+Ten transparent PNG portraits preload and decode before role selection. The original individual portrait designs are used, with backgrounds removed; the later composite atlas is not used. Character names appear only in the selection UI. Portraits always preserve their square aspect ratio. Waiting-room slots fit approximately 36–40 icons on a typical portrait phone, then overlap if full.
+
+The three original generated theme PNGs are copied unchanged into `public/assets/`. They are shown at 80% opacity over white and **stretched to the viewport, never cropped**. Portrait mobile screens select matching `*-mobile.png` compositions; desktop uses the untouched landscape originals. Phaser renders falling snow, drifting bubbles, forest glitter, answer rewards and final confetti above the UI without intercepting touches. Reduced-motion preferences suppress the animated effects.
+
+Artwork was made with the built-in image generation tool. Prompts and the exact asset mapping are recorded in `public/assets/artwork.json`. The logo uses a handwritten mint-and-pink wordmark; display fonts load from Google Fonts with local fallbacks.
+
+## GitHub Pages deployment
+
+Commit the project on **main**, add your GitHub repository as `origin`, and make sure your normal Git credentials can push. Then:
+
+```sh
+./deploy.sh
+```
+
+The script builds the **committed main branch** in a disposable folder, runs tests, then commits only the built site to `gh-pages`. It creates that branch when missing, preserves existing branch history, and pushes without force. It does not switch or alter your working branch. Uncommitted source changes are not published. Public Vite settings from your ignored `.env.local` are copied into the build; exported Vite environment variables also work.
+
+In GitHub Settings → Pages, select **Deploy from a branch → gh-pages → / (root)** and set the custom domain to `plouf.space`. Configure your domain's DNS for GitHub Pages and enable HTTPS. `public/CNAME` is copied to the deployment root automatically. `./deploy.sh --dry-run` builds and checks main without pushing or changing branches.
+
+## Checks
+
+```sh
+npm test
+npm run build
+bash -n deploy.sh
+python3 -m unittest discover -s tests -p 'test_*.py'
+```
+
+Browser checks cover the mobile layout. Supabase commands and migrations were deliberately not executed, so live multiplayer, database concurrency and remote deployment still require an integration check after setup.
