@@ -36,7 +36,7 @@ test("every channel preserves the song and appends exactly 1.75 seconds of silen
   }
 });
 
-test("all five songs preload once; muting and track changes do not fetch or overlap songs", async () => {
+test("all theme songs preload once; muting and track changes do not fetch or overlap songs", async () => {
   const sources = [];
   let fetched = 0,
     loaded = 0;
@@ -75,8 +75,8 @@ test("all five songs preload once; muting and track changes do not fetch or over
     (track) => track,
     () => loaded++,
   );
-  assert.equal(fetched, 5);
-  assert.equal(loaded, 5);
+  assert.equal(fetched, MUSIC_TRACKS.length);
+  assert.equal(loaded, MUSIC_TRACKS.length);
   assert.deepEqual([...music.buffers.keys()].sort(), [...MUSIC_TRACKS].sort());
   music.setTrack("lobby");
   assert.equal(sources.length, 0, "wait for a user interaction");
@@ -99,5 +99,9 @@ test("all five songs preload once; muting and track changes do not fetch or over
   assert.equal(sources.length, 3);
   assert.equal(sources[2].buffer, music.buffers.get("podium"));
   await music.preload((track) => track);
-  assert.equal(fetched, 5, "music is reused from decoded buffers");
+  assert.equal(
+    fetched,
+    MUSIC_TRACKS.length,
+    "music is reused from decoded buffers",
+  );
 });

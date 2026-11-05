@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Render five original Plouf instrumental compositions (numpy + ffmpeg)."""
+"""Render six original Plouf instrumental compositions (numpy + ffmpeg)."""
 from pathlib import Path
 import math
+import sys
 import subprocess
 import tempfile
 import wave
@@ -51,6 +52,7 @@ def instrument(note, duration, voice):
 
 
 def render(name, bpm, beats, chords, melodies, lead):
+    if len(sys.argv)>1 and name not in sys.argv[1:]: return
     beat = 60 / bpm
     bars = len(chords)
     music_end = bars * beats * beat
@@ -75,6 +77,9 @@ def render(name, bpm, beats, chords, melodies, lead):
         if kind == 'kick':
             phase = 2*np.pi*(47*t + 4*(1-np.exp(-t*30)))
             x = np.sin(phase)*np.exp(-t*19)
+        elif kind == 'tom':
+            phase = 2*np.pi*(110*t + 3*(1-np.exp(-t*24)))
+            x = np.sin(phase)*np.exp(-t*16)+noise*.02*np.exp(-t*40)
         elif kind == 'clap':
             x = (noise - np.roll(noise,1)) * np.exp(-t*35) * .25
             x *= .4+.6*(np.sin(t*330)**2)
@@ -114,6 +119,11 @@ def render(name, bpm, beats, chords, melodies, lead):
                 percussion(start+b*beat,'sleigh',.12 if b else .17)
                 if b:
                     for n in chord:add(n,start+b*beat,beat*.6,'harp',.04,.2)
+        elif name=='jungle':
+            for b in range(8):
+                percussion(start+b*.5*beat,'shaker',.16)
+                if b in (0,3,4,7):percussion(start+b*.5*beat,'tom',.23)
+            percussion(start,'kick',.19)
         elif name=='forest':
             if bar%2==0:add(chord[2]+24,start+2.5*beat,beat*1.5,'bell',.035,-.5)
         elif name=='underwater':
@@ -123,9 +133,11 @@ def render(name, bpm, beats, chords, melodies, lead):
             percussion(start+2.5*beat,'kick',.08)
         else:
             for b in range(4):
-                percussion(start+b*beat,'kick',.22)
-                if b%2:percussion(start+b*beat,'clap',.19)
-                percussion(start+(b+.5)*beat,'shaker',.24)
+                percussion(start+b*beat,'kick',.32)
+                if b%2:percussion(start+b*beat,'clap',.3)
+                percussion(start+(b+.5)*beat,'shaker',.28)
+                if b in (1,3):percussion(start+(b+.75)*beat,'tom',.19)
+                add(chord[(b+1)%len(chord)]-24,start+(b+.5)*beat,beat*.4,'bass',.16)
             for j,n in enumerate(chord):add(n+12,start+1.5*beat,.2,'brass',.035,j*.2-.2)
     # Stereo room reflections and a soft reverb tail; no hard loop cut.
     dry=mix.copy()
@@ -161,7 +173,10 @@ if __name__=='__main__':
     render('underwater',96,4,[[57,60,64,67],[53,57,60,64],[60,64,67,71],[55,59,62,69]]*4,
            [[76,None,79,81,None,79,76,72],[72,76,None,77,81,None,79,76],
             [79,None,83,86,83,None,79,76],[74,79,None,81,79,74,71,None]],'marimba')
-    render('podium',124,4,[C,G,Am,F,C,F,G,C]*2,
+    render('jungle',112,4,[[57,60,64],[53,57,60],[55,59,62],[52,55,59]]*4,
+           [[81,84,88,None,84,81,79,76],[81,None,84,89,88,84,81,77],
+            [79,83,86,83,None,79,76,74],[79,76,71,None,76,79,76,None]],'flute')
+    render('podium',138,4,[C,G,Am,F,C,F,G,C]*2,
            [[72,76,79,None,84,83,79,76],[74,79,83,86,None,83,81,79],
             [81,None,84,88,86,84,81,79],[77,81,84,None,89,88,84,81],
             [84,79,76,79,84,None,88,86],[89,88,84,81,None,84,81,77],

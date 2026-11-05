@@ -3,6 +3,7 @@ export const MUSIC_TRACKS = [
   "christmas",
   "underwater",
   "forest",
+  "jungle",
   "podium",
 ];
 export const REPEAT_GAP_SECONDS = 1.75;

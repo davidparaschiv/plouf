@@ -1,4 +1,7 @@
 import "./style.css";
+import { PodiumInteraction } from "./podium.js";
+const podiumInteraction = new PodiumInteraction();
+import { loadCharacters, themeCharacters } from "./characters.js";
 import {
   characters,
   themes,
@@ -9,16 +12,21 @@ import {
 import { rpc } from "./api.js";
 import { setAtmosphere, reward } from "./effects.js";
 import { RoomMusic, MUSIC_TRACKS } from "./music.js";
+import {
+  loadLanguages,
+  locale,
+  setLanguage,
+  t,
+  translatedRank,
+  errorText,
+} from "./i18n.js";
 const music = new RoomMusic();
 const audioToggle = document.querySelector("#audio-toggle");
 audioToggle.addEventListener("click", () => {
   const enabled = music.toggle();
   audioToggle.setAttribute("aria-pressed", String(!enabled));
-  audioToggle.setAttribute(
-    "aria-label",
-    enabled ? "Mute music" : "Unmute music",
-  );
-  audioToggle.title = enabled ? "Mute music" : "Unmute music";
+  audioToggle.setAttribute("aria-label", enabled ? t("mute") : t("unmute"));
+  audioToggle.title = enabled ? t("mute") : t("unmute");
 });
 document.addEventListener("pointerdown", () => music.unlock(), {
   passive: true,
@@ -49,7 +57,9 @@ let roomId = new URLSearchParams(location.search).get("room") || "",
   lastSession = "",
   answerPending = false,
   feedback = "",
-  currentView = "home",
+  answerRevealUntil = 0,
+  guestRoom = null,
+  currentView = "loading",
   preloadPromise;
 const call = rpc;
 function toast(message) {
@@ -60,6 +70,7 @@ function toast(message) {
   toast.timer = setTimeout(() => el.classList.remove("visible"), 4500);
 }
 function clearRoom() {
+  podiumInteraction.dispose();
   clearTimeout(pollTimer);
   snapshot = null;
   signature = "";
@@ -67,39 +78,132 @@ function clearRoom() {
   positions.clear();
   answerPending = false;
   feedback = "";
+  answerRevealUntil = 0;
   document.body.classList.remove("themed", "podium");
   document.querySelector("#background").style.backgroundImage = "";
   setAtmosphere("");
   music.setTrack("lobby");
 }
 function back() {
-  return '<button class="back" data-action="home">← Back</button>';
+  return `<button class="back" data-action="home">${t("back")}</button>`;
 }
 function home() {
   clearRoom();
   currentView = "home";
-  app.innerHTML = `<section class="hero"><p class="eyebrow">Gather. Guess. Make a splash.</p><h1>A little spark.<br>A lot of <em>Plouf.</em></h1></section><section class="roles" aria-label="Choose your role"><button class="role" data-action="guest"><span class="symbol" aria-hidden="true"><img src="${asset("role-guest.png")}" alt=""></span><strong>Guest</strong><small>Find your room. Jump in.</small><span class="arrow">↗</span></button><button class="role host" data-action="host"><span class="symbol" aria-hidden="true"><img src="${asset("role-host.png")}" alt=""></span><strong>Host</strong><small>Your questions. Your world.</small><span class="arrow">↗</span></button></section><p class="home-footer">A room full of friends. One place at the top.</p>`;
+  app.innerHTML = `<section class="hero"><p class="eyebrow">${t("eyebrow")}</p><h1>${t("spark")}<br>${t("lot")} <em>Plouf.</em></h1><p class="home-description">${t("description")}</p></section><section class="roles" aria-label="${t("joiningHow")}"><button class="role" data-action="guest"><span class="symbol" aria-hidden="true"><img src="${asset("role-guest.png")}" alt=""></span><strong>${t("guest")}</strong><small>${t("guestNote")}</small><span class="arrow">↗</span></button><button class="role host" data-action="host"><span class="symbol" aria-hidden="true"><img src="${asset("role-host.png")}" alt=""></span><strong>${t("host")}</strong><small>${t("hostNote")}</small><span class="arrow">↗</span></button></section><p class="home-footer">${t("footer")}</p><p class="word-note">${t("wordNote")}</p>`;
   if (roomId)
     app.querySelector(".hero").innerHTML =
-      `<p class="eyebrow">${esc(roomId)}</p><h1>Come on <em>in.</em></h1><p class="muted">How are you joining?</p>`;
+      `<p class="eyebrow">${esc(roomId)}</p><h1>${t("comeIn")}</h1><p class="muted">${t("joiningHow")}</p>`;
 }
 function characterPicker() {
-  return `<div><span class="field-label">Choose your character</span><div class="characters">${characters.map((name, i) => `<button type="button" class="character ${i === selected ? "selected" : ""}" data-character="${i}" aria-pressed="${i === selected}">${avatar(i)}<span>${name}</span></button>`).join("")}</div></div>`;
+  const group = guestRoom ? themeCharacters(guestRoom.theme) : [];
+  if (!group.length) return `<p class="muted">${t("roomFirst")}</p>`;
+  return `<div><span class="field-label">${t("chooseCharacter")} · ${t(guestRoom.theme)}</span><div class="characters">${group.map((c) => `<button type="button" class="character ${c.id === selected ? "selected" : ""}" data-character="${c.id}" aria-pressed="${c.id === selected}">${avatar(c.id)}<span>${esc(c.name[locale()])}</span></button>`).join("")}</div></div>`;
 }
 function guestForm() {
   currentView = "guest";
-  app.innerHTML = `<section class="panel">${back()}<h2>Make your entrance.</h2><p class="muted">A name. A face. You're in.</p><form id="guest-form" class="stack"><div><label for="room">Room ID</label><input id="room" name="room" type="text" required value="${esc(roomId)}" placeholder="PID-10020" autocapitalize="characters" autocomplete="off"></div><div><label for="name">Your name</label><input id="name" name="name" type="text" required maxlength="32" placeholder="What should we call you?" autocomplete="nickname"></div>${characterPicker()}<p class="error" id="form-error" hidden></p><button class="primary wide" type="submit">Join room ↗</button></form></section>`;
+  app.innerHTML = `<section class="panel">${back()}<h2>${t("entrance")}</h2><p class="muted">${t("entranceNote")}</p><form id="guest-form" class="stack"><div><label for="room">${t("roomId")}</label><div class="room-lookup"><input id="room" name="room" type="text" required value="${esc(roomId)}" placeholder="PID-10020" autocapitalize="characters" autocomplete="off"><button type="button" class="secondary" data-action="find-room">${t("checkRoom")}</button></div></div><div><label for="name">${t("yourName")}</label><input id="name" name="name" type="text" required maxlength="32" placeholder="${t("namePlaceholder")}" autocomplete="nickname"></div><div id="character-picker">${characterPicker()}</div><p class="error" id="form-error" hidden></p><button class="primary wide" type="submit" ${guestRoom?.can_join ? "" : "disabled"}>${t("join")}</button></form></section>`;
 }
-function hostForm() {
+async function findGuestRoom() {
+  if (busy) return;
+  const room = app.querySelector("#room").value.trim().toUpperCase();
+  if (!room) return;
+  const button = app.querySelector('[data-action="find-room"]');
+  button.disabled = true;
+  busy = true;
+  try {
+    const { data } = await call("room_info", { p_room: room });
+    if (
+      currentView !== "guest" ||
+      app.querySelector("#room").value.trim().toUpperCase() !== room
+    )
+      return;
+    guestRoom = { id: room, ...data };
+    roomId = room;
+    selected = themeCharacters(data.theme)[0].id;
+    app.querySelector("#character-picker").innerHTML = characterPicker();
+    app.querySelector("[type=submit]").disabled = !data.can_join;
+    const error = app.querySelector("#form-error");
+    error.hidden = data.can_join;
+    error.textContent = data.can_join ? "" : t("notOpen");
+  } catch (error) {
+    guestRoom = null;
+    const el = app.querySelector("#form-error");
+    if (el) {
+      el.textContent = errorText(error);
+      el.hidden = false;
+    }
+  } finally {
+    busy = false;
+    if (button.isConnected) button.disabled = false;
+  }
+}
+function hostForm(reset = true) {
   if (roomId) return unlockForm();
   currentView = "host";
-  questions = null;
-  app.innerHTML = `<section class="panel">${back()}<h2>Your room. Your rules.</h2><p class="muted">Pick a world. Bring the questions.</p><form id="host-form" class="stack"><div><span class="field-label">Choose a world</span><div class="themes">${themes.map((t) => `<button type="button" data-theme="${t.id}" class="theme ${t.id === selectedTheme ? "selected" : ""}" aria-pressed="${t.id === selectedTheme}"><img src="${asset(t.id + ".png")}" alt=""><span>${t.name}</span></button>`).join("")}</div></div><label class="upload"><span id="upload-label">↑ Upload questions · JSON</span><input id="questions" type="file" accept="application/json,.json" required></label><a class="back" href="${import.meta.env.BASE_URL}example-questions.json" download style="margin:0">Download example JSON ↗</a><div><label for="password">Host password</label><input id="password" name="password" type="password" required minlength="4" placeholder="At least 4 characters" autocomplete="new-password"></div><p class="error" id="form-error" hidden></p><button class="primary wide" type="submit">Create room ↗</button></form><button class="back" data-action="unlock" style="margin:20px 0 0">Already have a room? →</button></section>`;
+  if (reset) questions = null;
+  app.innerHTML = `<section class="panel">${back()}<h2>${t("hostTitle")}</h2><p class="muted">${t("hostNoteForm")}</p><form id="host-form" class="stack"><div><span class="field-label">${t("chooseWorld")}</span><div class="themes">${themes.map((theme) => `<button type="button" data-theme="${theme.id}" class="theme ${theme.id === selectedTheme ? "selected" : ""}" aria-pressed="${theme.id === selectedTheme}"><img src="${asset(theme.id + ".png")}" alt=""><span>${t(theme.id)}</span></button>`).join("")}</div></div><label class="upload"><span id="upload-label">${t("upload")}</span><input id="questions" type="file" accept="application/json,.json" required></label><a class="back" href="${import.meta.env.BASE_URL}example-questions.json" download style="margin:0">${t("example")}</a><div><label for="password">${t("password")}</label><input id="password" name="password" type="password" required minlength="4" placeholder="${t("passwordHint")}" autocomplete="new-password"></div><p class="error" id="form-error" hidden></p><button class="primary wide" type="submit">${t("create")}</button></form><button class="back" data-action="unlock" style="margin:20px 0 0">${t("existing")}</button></section>`;
 }
 function unlockForm() {
   currentView = "unlock";
-  app.innerHTML = `<section class="panel">${back()}<h2>Welcome back, host.</h2><form id="unlock-form" class="stack"><div><label for="room">Room ID</label><input type="text" id="room" name="room" value="${esc(roomId)}" placeholder="PID-10020" required></div><div><label for="password">Host password</label><input type="password" id="password" name="password" required minlength="4" autocomplete="current-password"></div><p class="error" id="form-error" hidden></p><button type="submit" class="primary">Enter room ↗</button></form></section>`;
+  app.innerHTML = `<section class="panel">${back()}<h2>${t("welcomeHost")}</h2><form id="unlock-form" class="stack"><div><label for="room">${t("roomId")}</label><input type="text" id="room" name="room" value="${esc(roomId)}" placeholder="PID-10020" required></div><div><label for="password">${t("password")}</label><input type="password" id="password" name="password" required minlength="4" autocomplete="current-password"></div><p class="error" id="form-error" hidden></p><button type="submit" class="primary">${t("enter")}</button></form></section>`;
 }
+function updateLanguageControls() {
+  document.querySelector("#header-tagline").textContent = t("header");
+  document
+    .querySelector(".language-toggle")
+    .setAttribute("aria-label", t("language"));
+  document
+    .querySelectorAll("[data-language]")
+    .forEach((button) =>
+      button.setAttribute(
+        "aria-pressed",
+        String(button.dataset.language === locale()),
+      ),
+    );
+  const label = music.enabled ? t("mute") : t("unmute");
+  audioToggle.title = label;
+  audioToggle.setAttribute("aria-label", label);
+}
+function redrawLanguage() {
+  updateLanguageControls();
+  const fields = [...app.querySelectorAll("input")].map((input) => ({
+    id: input.id,
+    value: input.value,
+    element: input.type === "file" ? input : null,
+  }));
+  if (currentView === "room") {
+    signature = "";
+    renderRoom();
+  } else if (currentView === "guest") guestForm();
+  else if (currentView === "host") hostForm(false);
+  else if (currentView === "unlock") unlockForm();
+  else if (currentView === "home") home();
+  else if (currentView === "loading") {
+    const heading = app.querySelector(".loader h2"),
+      message = app.querySelector(".loader p");
+    if (heading) heading.textContent = t("loadingTitle");
+    if (message) message.textContent = t("loading");
+  }
+  for (const field of fields) {
+    const replacement = document.getElementById(field.id);
+    if (!replacement) continue;
+    if (field.element) replacement.replaceWith(field.element);
+    else replacement.value = field.value;
+  }
+  const file = app.querySelector("#questions")?.files?.[0];
+  if (file && questions)
+    document.querySelector("#upload-label").textContent = t("questionFile", {
+      count: questions.length,
+      name: file.name,
+    });
+}
+document.querySelectorAll("[data-language]").forEach((button) =>
+  button.addEventListener("click", () => {
+    setLanguage(button.dataset.language);
+    redrawLanguage();
+  }),
+);
 async function loadImage(src) {
   const image = new Image();
   image.src = src;
@@ -108,10 +212,9 @@ async function loadImage(src) {
 }
 async function preload() {
   if (preloadPromise) return preloadPromise;
-  app.innerHTML =
-    '<section class="loader"><h2>Getting everyone ready.</h2><div class="loader-track" role="progressbar" aria-label="Loading room assets" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="loader-fill" style="width:0%"></div></div><p>Loading your worlds, characters & music…</p></section>';
+  app.innerHTML = `<section class="loader"><h2>${t("loadingTitle")}</h2><div class="loader-track" role="progressbar" aria-label="${t("loading")}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="loader-fill" style="width:0%"></div></div><p>${t("loading")}</p></section>`;
   const images = [
-    ...characters.map((_, i) => `character-${i}.png`),
+    ...characters.map((character) => character.file),
     ...themes.flatMap(({ id }) => [`${id}.png`, `${id}-mobile.png`]),
     "role-guest.png",
     "role-host.png",
@@ -144,7 +247,7 @@ async function preload() {
     return await preloadPromise;
   } catch {
     preloadPromise = null;
-    throw Error("Some room assets could not load. Please try again.");
+    throw Error(t("loadError"));
   }
 }
 async function poll() {
@@ -154,6 +257,18 @@ async function poll() {
   try {
     const result = await call("room_snapshot", { p_room: id });
     if (id !== roomId) return;
+    if (
+      (answerPending || Date.now() < answerRevealUntil) &&
+      snapshot?.phase === "question" &&
+      (result.data.phase !== "question" ||
+        result.data.question_index !== snapshot.question_index)
+    ) {
+      pollTimer = setTimeout(
+        poll,
+        Math.max(50, answerRevealUntil - Date.now()),
+      );
+      return;
+    }
     snapshot = result.data;
     offset = result.offset;
     if (lastSession && lastSession !== snapshot.session_id) {
@@ -168,10 +283,10 @@ async function poll() {
     if (/Join this room first/.test(e.message)) {
       clearRoom();
       guestForm();
-      toast("The host opened a fresh room. Join again.");
+      toast(t("freshRoom"));
       return;
     }
-    toast(e.message);
+    toast(errorText(e));
     if (!snapshot) return;
   }
   pollTimer = setTimeout(
@@ -214,6 +329,7 @@ function renderRoom() {
     return;
   }
   signature = sig;
+  if (s.phase !== "finished") podiumInteraction.dispose();
   if (s.phase === "waiting" || s.phase === "closed") renderWaiting();
   else if (s.phase === "countdown") renderCountdown();
   else if (s.phase === "question") renderQuestion();
@@ -221,14 +337,14 @@ function renderRoom() {
   updateTimer();
 }
 function roomHeader() {
-  return `<div class="room-head"><span class="room-code">${esc(snapshot.id)}</span><span class="pill">${snapshot.host ? "Host" : "Guest"}</span></div>`;
+  return `<div class="room-head"><span class="room-code">${esc(snapshot.id)}</span><span class="pill">${snapshot.host ? t("host") : t("guest")}</span></div>`;
 }
 function renderWaiting() {
   const s = snapshot;
   const url = new URL(location.href);
   url.search = "";
   url.searchParams.set("room", s.id);
-  app.innerHTML = `<section style="max-width:650px;margin:auto">${roomHeader()}<div class="waiting-title"><p class="eyebrow">${s.started ? "The more, the merrier" : "Ready when you are"}</p><h1>${s.started ? "Good company." : "Make some room."}</h1></div>${s.host ? `<div class="share"><input type="text" id="share-url" aria-label="Room link" readonly value="${esc(url.href)}"><button class="secondary" data-action="copy">Copy link</button></div>` : ""}<div class="arena" id="arena">${s.members.length ? "" : '<span class="empty">' + (s.started ? "Waiting for a little company…" : "Start your room to welcome guests.") + "</span>"}</div><p class="room-meta">${s.members.length} ${s.members.length === 1 ? "guest" : "guests"}${s.started ? " · Waiting for the host to play" : ""}</p><div class="room-actions">${s.host ? `<button class="primary" data-action="${s.started ? "play" : "start"}">${s.started ? "Play →" : "Start room →"}</button>${s.started ? '<button class="secondary" data-action="start">Reset</button>' : ""}` : '<span class="muted"><span class="spinner"></span> Get comfortable.</span>'}</div></section>`;
+  app.innerHTML = `<section style="max-width:650px;margin:auto">${roomHeader()}<div class="waiting-title"><p class="eyebrow">${s.started ? t("more") : t("ready")}</p><h1>${s.started ? t("company") : t("makeRoom")}</h1></div>${s.host ? `<div class="share"><input type="text" id="share-url" aria-label="${t("roomId")}" readonly value="${esc(url.href)}"><button class="secondary" data-action="copy">${t("copy")}</button></div>` : ""}<div class="arena" id="arena">${s.members.length ? "" : `<span class="empty">${s.started ? t("waitingCompany") : t("startWelcome")}</span>`}</div><p class="room-meta">${t(s.members.length === 1 ? "guestCount" : "guestsCount", { count: s.members.length })}${s.started ? " · " + t("waitingHost") : ""}</p><div class="room-actions">${s.host ? `<button class="primary" data-action="${s.started ? "play" : "start"}">${s.started ? t("play") : t("start")}</button>${s.started ? `<button class="secondary" data-action="start">${t("reset")}</button>` : ""}` : `<span class="muted"><span class="spinner"></span> ${t("comfortable")}</span>`}</div></section>`;
   placeMembers();
 }
 function placeMembers() {
@@ -269,29 +385,118 @@ function renderCountdown() {
   answerPending = false;
   const me = s.members.find((m) => m.id === s.member_id);
   const markers = rankingMarkers(s.members, s.host ? null : s.member_id);
-  app.innerHTML = `<section class="countdown-screen"><div class="${s.question_index > 0 ? "ranking-panel" : ""}">${s.question_index > 0 ? `${!s.host ? `<div class="points">${(me?.points || 0).toLocaleString()} <small>PTS</small></div>` : ""}<div class="road" aria-label="Current ranking">${markers.map((p) => `<div class="marker ${p.id === s.member_id ? "me" : ""}" style="left:${p.position}%"><strong>${ordinal(p.rank)}</strong><span>${esc(p.name)}</span>${avatar(p.character)}</div>`).join("")}</div>` : `<div style="text-align:center;margin-top:9vh"><p class="eyebrow">${esc(s.id)}</p><h2>Here comes the Plouf.</h2></div>`}</div><div class="countdown-number"><p>${s.question_index === 0 ? "Get ready" : "Next question"}</p><b id="timer">5</b></div></section>`;
+  app.innerHTML = `<section class="countdown-screen"><div class="${s.question_index > 0 ? "ranking-panel" : ""}">${s.question_index > 0 ? `${!s.host ? `<div class="points">${(me?.points || 0).toLocaleString()} <small>${t("points")}</small></div>` : ""}<div class="road" aria-label="${t("ranking")}">${markers.map((p) => `<div class="marker ${p.id === s.member_id ? "me" : ""}" style="left:${p.position}%"><strong>${translatedRank(p.rank)}</strong><span>${esc(p.name)}</span>${avatar(p.character)}</div>`).join("")}</div>` : `<div style="text-align:center;margin-top:9vh"><p class="eyebrow">${esc(s.id)}</p><h2>${t("hereComes")}</h2></div>`}</div><div class="countdown-number"><p>${s.question_index === 0 ? t("getReady") : t("next")}</p><b id="timer">5</b></div></section>`;
 }
 function renderQuestion() {
   const s = snapshot;
   answerPending = false;
-  if (s.answer)
-    feedback = s.answer.correct
-      ? `${ordinal(s.answer.position)} correct answer. Nice one!`
-      : "Not this one. Next question, fresh chance.";
-  else feedback = "";
-  app.innerHTML = `<section class="question"><div class="question-top"><span>${s.question_index + 1} <span class="muted">/ ${s.question_count}</span></span><span class="timer"><span id="timer">15</span><small style="font-size:12px"> s</small></span></div><div class="question-card"><h2>${esc(s.question)}</h2></div><div class="answers">${(s.answers || []).map((text, i) => `<button class="answer ${s.answer?.choice === i ? "chosen" : ""}" data-answer="${i}" ${s.host || s.answer ? "disabled" : ""}><span class="letter">${["A", "B", "C", "D"][i]}</span>${esc(text)}</button>`).join("")}</div><p class="feedback" id="feedback">${s.host ? "You’re hosting. Enjoy the show." : esc(feedback)}</p></section>`;
+  feedback = s.answer
+    ? s.answer.correct
+      ? t("correctFeedback", { rank: translatedRank(s.answer.position) })
+      : t("wrongFeedback")
+    : "";
+  app.innerHTML = `<section class="question"><div class="question-top"><span>${s.question_index + 1} <span class="muted">/ ${s.question_count}</span></span><span class="timer"><span id="timer">15</span><small style="font-size:12px"> s</small></span></div><div class="question-card"><h2>${esc(s.question)}</h2></div><div class="answers">${(
+    s.answers || []
+  )
+    .map((text, i) => {
+      const chosen = s.answer?.choice === i;
+      return `<button class="answer ${chosen ? "chosen " + (s.answer.correct ? "is-correct" : "is-incorrect") : ""}" data-answer="${i}" ${s.host || s.answer ? "disabled" : ""} aria-label="${chosen ? t(s.answer.correct ? "correct" : "incorrect") : esc(text)}"><span class="answer-copy"><span class="letter">${["A", "B", "C", "D"][i]}</span>${esc(text)}</span>${chosen ? `<span class="answer-result" aria-hidden="true">${s.answer.correct ? "✓" : "×"}</span>` : ""}</button>`;
+    })
+    .join(
+      "",
+    )}</div><p class="feedback" id="feedback">${s.host ? t("hostWatching") : esc(feedback)}</p></section>`;
 }
 function renderPodium() {
   const winners = snapshot.members.slice(0, 3);
   const order = [1, 0, 2].filter((i) => winners[i]);
-  app.innerHTML = `<section><div class="podium-title"><p class="eyebrow">That's a wrap</p><h1>A little <em>legendary.</em></h1></div><div class="podium-row">${order
+  app.innerHTML = `<section class="podium-screen"><div class="podium-title"><p class="eyebrow">${t("wrap")}</p><h1>${t("legendary")}</h1></div><div class="podium-row">${order
     .map((i) => {
       const m = winners[i];
-      return `<div class="winner ${["gold", "silver", "bronze"][i]}">${avatar(m.character)}<span class="winner-name">${esc(m.name)}</span><span class="winner-points">${m.points.toLocaleString()} pts</span><div class="step">${i + 1}</div></div>`;
+      return `<div class="winner ${["gold", "silver", "bronze"][i]}" data-place="${i + 1}" data-member="${esc(m.id)}">${avatar(m.character)}<span class="winner-name">${esc(m.name)}</span><span class="winner-points">${m.points.toLocaleString()} ${t("points")}</span><div class="step">${i + 1}</div></div>`;
     })
     .join(
       "",
-    )}</div>${winners.length ? "" : '<p class="muted" style="text-align:center">No players this round.</p>'}<div class="room-actions" style="margin-top:35px">${snapshot.host ? '<button class="primary" data-action="start">Start a fresh room →</button>' : '<button class="primary" data-action="home">Back home →</button>'}</div></section>`;
+    )}</div>${winners.length ? "" : `<p class="muted" style="text-align:center">${t("noPlayers")}</p>`}<div class="room-actions" style="margin-top:35px">${snapshot.host ? `<button class="primary" data-action="start">${t("freshStart")}</button>` : `<button class="primary" data-action="home">${t("home")}</button>`}</div></section><div class="podium-floor" aria-label="${t("podiumPlayers")}"></div>`;
+  const me = snapshot.members.find(
+    (member) => member.id === snapshot.member_id,
+  );
+  if (!snapshot.host && [1, 2].includes(Number(me?.rank))) {
+    app.querySelector(".podium-floor").classList.add("above-winner-banner");
+    app.insertAdjacentHTML(
+      "beforeend",
+      `<aside class="winner-banner"><strong>${t(Number(me.rank) === 1 ? "wonFirst" : "wonSecond")}</strong><span>${t("dragLower")}</span></aside>`,
+    );
+  }
+  podiumInteraction.mount(app, snapshot);
+  placePodiumPlayers();
+}
+function placePodiumPlayers() {
+  const floor = app.querySelector(".podium-floor");
+  if (!floor) return;
+  const size = 44,
+    pad = 6,
+    cols = Math.max(1, Math.floor((floor.clientWidth - pad * 2) / (size + 4))),
+    rows = Math.max(1, Math.floor((floor.clientHeight - pad * 2) / (size + 4)));
+  const used = new Set();
+  for (const member of snapshot.members) {
+    const slots = Array.from({ length: cols * rows }, (_, i) => i).filter(
+      (i) => !used.has(i),
+    );
+    const slot = slots.length
+      ? slots[Math.floor(Math.random() * slots.length)]
+      : Math.floor(Math.random() * cols * rows);
+    used.add(slot);
+    const x = Math.min(
+        floor.clientWidth - size - pad,
+        pad + (slot % cols) * (size + 4),
+      ),
+      y = Math.min(
+        floor.clientHeight - size - pad,
+        pad + Math.floor(slot / cols) * (size + 4),
+      );
+    const el = document.createElement("div");
+    el.className = "podium-roamer";
+    el.style.cssText = `left:${x}px;top:${y}px;width:${size}px;height:${size}px`;
+    el.innerHTML = avatar(member.character);
+    floor.append(el);
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const points = Array.from({ length: 7 }, (_, i) =>
+        i === 0
+          ? { x: 0, y: 0 }
+          : {
+              x:
+                Math.random() *
+                  Math.max(0, floor.clientWidth - size - pad * 2) +
+                pad -
+                x,
+              y:
+                Math.random() *
+                  Math.max(0, floor.clientHeight - size - pad * 2) +
+                pad -
+                y,
+            },
+      );
+      points.push(points[0]);
+      let total = 0;
+      const distances = [0];
+      for (let i = 1; i < points.length; i++) {
+        total += Math.hypot(
+          points[i].x - points[i - 1].x,
+          points[i].y - points[i - 1].y,
+        );
+        distances.push(total);
+      }
+      const frames = points.map((point, i) => ({
+        transform: `translate(${point.x}px,${point.y}px)`,
+        offset: total ? distances[i] / total : i / (points.length - 1),
+      }));
+      el.animate(frames, {
+        duration: Math.max(45000, (total / 12) * 1000),
+        iterations: Infinity,
+        easing: "linear",
+      });
+    }
+  }
 }
 function updateTimer() {
   const el = document.querySelector("#timer");
@@ -319,11 +524,12 @@ async function submitAnswer(choice) {
       p_choice: choice,
     });
     snapshot.answer = data;
+    answerRevealUntil = Date.now() + 1000;
     signature = "";
     renderRoom();
     if (data.correct) reward(data.position);
   } catch (e) {
-    toast(e.message);
+    toast(errorText(e));
     answerPending = false;
     await poll();
   }
@@ -356,7 +562,12 @@ app.addEventListener("click", async (e) => {
     history.replaceState(null, "", location.pathname);
     return home();
   }
-  if (action === "guest") return guestForm();
+  if (action === "find-room") return findGuestRoom();
+  if (action === "guest") {
+    guestRoom = null;
+    guestForm();
+    return;
+  }
   if (action === "host") return hostForm();
   if (action === "unlock") return unlockForm();
   if (action === "copy") {
@@ -364,10 +575,10 @@ app.addEventListener("click", async (e) => {
       await navigator.clipboard.writeText(
         document.querySelector("#share-url").value,
       );
-      toast("Link copied. Invite your people.");
+      toast(t("linkCopied"));
     } catch {
       document.querySelector("#share-url").select();
-      toast("Select and copy your room link.");
+      toast(t("copyManual"));
     }
     return;
   }
@@ -377,10 +588,22 @@ app.addEventListener("click", async (e) => {
       await call(`${action}_room`, { p_room: roomId });
       await poll();
     } catch (e) {
-      toast(e.message);
+      toast(errorText(e));
     } finally {
       busy = false;
     }
+  }
+});
+app.addEventListener("input", (event) => {
+  if (
+    currentView === "guest" &&
+    event.target.id === "room" &&
+    guestRoom &&
+    event.target.value.trim().toUpperCase() !== guestRoom.id
+  ) {
+    guestRoom = null;
+    app.querySelector("#character-picker").innerHTML = characterPicker();
+    app.querySelector("[type=submit]").disabled = true;
   }
 });
 app.addEventListener("change", async (e) => {
@@ -390,13 +613,14 @@ app.addEventListener("change", async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     questions = validateQuestions(JSON.parse(await file.text()));
-    document.querySelector("#upload-label").textContent =
-      `${questions.length} questions · ${file.name}`;
+    document.querySelector("#upload-label").textContent = t("questionFile", {
+      count: questions.length,
+      name: file.name,
+    });
   } catch (error) {
     e.target.value = "";
-    document.querySelector("#upload-label").textContent =
-      "↑ Upload questions · JSON";
-    toast(error.message);
+    document.querySelector("#upload-label").textContent = t("upload");
+    toast(errorText(error));
   }
 });
 app.addEventListener("submit", async (e) => {
@@ -419,6 +643,7 @@ app.addEventListener("submit", async (e) => {
       roomId = data;
     } else if (e.target.id === "guest-form") {
       roomId = String(fields.get("room")).trim().toUpperCase();
+      if (!guestRoom || guestRoom.id !== roomId) throw Error(t("roomFirst"));
       await call("join_room", {
         p_room: roomId,
         p_name: String(fields.get("name")),
@@ -437,9 +662,9 @@ app.addEventListener("submit", async (e) => {
     await poll();
   } catch (error) {
     if (errorEl.isConnected) {
-      errorEl.textContent = error.message;
+      errorEl.textContent = errorText(error);
       errorEl.hidden = false;
-    } else toast(error.message);
+    } else toast(errorText(error));
   } finally {
     busy = false;
     if (button.isConnected) button.disabled = false;
@@ -453,7 +678,7 @@ document.querySelector(".logo").addEventListener("click", (e) => {
 });
 addEventListener("resize", () => {
   if (snapshot) setWorld();
-  if (snapshot?.phase === "waiting") {
+  if (snapshot?.phase === "waiting" || snapshot?.phase === "finished") {
     positions.clear();
     signature = "";
     renderRoom();
@@ -461,10 +686,15 @@ addEventListener("resize", () => {
 });
 async function boot() {
   try {
+    await Promise.all([
+      loadLanguages(`${import.meta.env.BASE_URL}lang.json`),
+      loadCharacters(`${import.meta.env.BASE_URL}characters.json`),
+    ]);
+    updateLanguageControls();
     await preload();
     home();
   } catch (error) {
-    app.innerHTML = `<section class="loader"><p class="error">${esc(error.message)}</p><button class="primary" id="retry">Retry</button></section>`;
+    app.innerHTML = `<section class="loader"><p class="error">${esc(error.message)}</p><button class="primary" id="retry">${t("retry")}</button></section>`;
     document.querySelector("#retry").onclick = () => location.reload();
   }
 }

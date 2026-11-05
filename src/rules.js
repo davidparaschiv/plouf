@@ -1,16 +1,6 @@
-export const characters = [
-  "Panda",
-  "Zebra",
-  "Rabbit",
-  "Stag",
-  "Tiger",
-  "Giraffe",
-  "Monkey",
-  "Siren",
-  "Shark",
-  "Nemo",
-];
+export {allCharacters as characters} from './characters.js';
 export const themes = [
+  { id: "jungle", name: "Jungle", note: "Into the wild" },
   { id: "forest", name: "Magical forest", note: "A little enchanted" },
   { id: "christmas", name: "Christmas", note: "Let it snow" },
   { id: "underwater", name: "Bubbles underwater", note: "Make a splash" },
@@ -44,15 +34,13 @@ export function rankingMarkers(players, current) {
     me = players.find((p) => p.id === current);
   return [
     ...new Map(
-      [first, last, me]
-        .filter(Boolean)
-        .map((p) => [
-          p.id,
-          {
-            ...p,
-            position: p.id === first.id ? 100 : p.id === last.id ? 0 : 50,
-          },
-        ]),
+      [first, last, me].filter(Boolean).map((p) => [
+        p.id,
+        {
+          ...p,
+          position: p.id === first.id ? 100 : p.id === last.id ? 0 : 50,
+        },
+      ]),
     ).values(),
   ];
 }

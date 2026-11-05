@@ -945,3 +945,209 @@ header .header-note {
   height: 100%;
   object-fit: contain;
 }
+.home-description {
+  max-width: 480px;
+  margin: 20px auto 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #596c60;
+}
+.language-toggle {
+  position: fixed;
+  top: max(22px, env(safe-area-inset-top));
+  right: 78px;
+  z-index: 40;
+  display: flex;
+  border: 1px solid #a5276120;
+  border-radius: 22px;
+  padding: 3px;
+  background: #ffffffe8;
+}
+.language-toggle button {
+  border: 0;
+  padding: 8px 9px;
+  border-radius: 18px;
+  font-size: 11px;
+  font-weight: 700;
+  background: transparent;
+  color: #56675d;
+}
+.language-toggle button[aria-pressed="true"] {
+  background: var(--mint);
+  color: var(--pink);
+}
+header .header-note {
+  margin-right: 150px;
+}
+.themes {
+  grid-template-columns: repeat(2, 1fr);
+}
+.answer-copy {
+  display: block;
+  transition:
+    opacity 0.3s,
+    transform 0.3s,
+    filter 0.3s;
+}
+.answer-result {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: clamp(65px, 15vw, 100px);
+  font-weight: 900;
+  animation: answer-morph 0.55s ease both;
+}
+.answer.is-correct .answer-copy,
+.answer.is-incorrect .answer-copy {
+  opacity: 0;
+  transform: scale(0.4);
+  filter: blur(5px);
+}
+.answer.is-correct .answer-result {
+  color: #087943;
+}
+.answer.is-incorrect .answer-result {
+  color: #b31c36;
+}
+@keyframes answer-morph {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-15deg);
+    filter: blur(6px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.12);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.podium-screen {
+  padding-bottom: 24svh;
+}
+.podium-floor {
+  position: fixed;
+  z-index: 2;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20svh;
+  min-height: 85px;
+  pointer-events: none;
+  overflow: hidden;
+}
+.podium-roamer {
+  position: absolute;
+  will-change: transform;
+}
+.podium-roamer .avatar {
+  width: 100%;
+  height: 100%;
+}
+.gold > .avatar {
+  animation: winner-double-hop 2s infinite;
+}
+@keyframes winner-double-hop {
+  0%,
+  25%,
+  50%,
+  100% {
+    transform: translateY(0);
+  }
+  12%,
+  37% {
+    transform: translateY(-18px);
+  }
+}
+@media (max-width: 600px) {
+  header .header-note {
+    display: none;
+  }
+  .home-description {
+    font-size: 13px;
+    max-width: 320px;
+  }
+}
+.room-lookup {
+  display: flex;
+  gap: 8px;
+}
+.room-lookup input {
+  min-width: 0;
+  flex: 1;
+}
+.room-lookup button {
+  white-space: nowrap;
+  padding-inline: 12px;
+  font-size: 12px;
+}
+
+.word-note {
+  max-width: 430px;
+  margin: 18px auto 0;
+  text-align: center;
+  font-size: 11px;
+  line-height: 1.65;
+  color: #77857b;
+}
+
+.winner-banner {
+  position: fixed;
+  z-index: 3;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 10svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 7px 14px;
+  background: rgba(120, 120, 120, 0.3);
+  color: #142119;
+  text-align: center;
+  pointer-events: none;
+  font-size: clamp(11px, 2.8vw, 14px);
+  line-height: 1.3;
+}
+.winner-banner span {
+  font-size: 0.9em;
+}
+.podium-floor.above-winner-banner {
+  bottom: 10svh;
+}
+.podium-draggable {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  cursor: grab;
+}
+.podium-draggable:active {
+  cursor: grabbing;
+}
+.podium-flight {
+  user-select: none;
+  filter: drop-shadow(0 4px 8px #a5276140);
+}
+
+.podium-flight-name {
+  position: absolute;
+  top: calc(100% - 26px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 130px;
+  overflow-wrap: anywhere;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #17271d;
+  pointer-events: none;
+}

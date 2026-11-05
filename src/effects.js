@@ -14,7 +14,7 @@ class Atmosphere extends Phaser.Scene {
     for (const x of this.floaters || []) x.destroy();
     this.floaters = [];
     this.lastTheme = theme;
-    if (reduced || !theme) return;
+    if (reduced || !theme || theme === "jungle") return;
     const { width: w, height: h } = this.scale;
     const count = theme === "confetti" ? 75 : theme === "christmas" ? 50 : 28;
     for (let i = 0; i < count; i++) {
