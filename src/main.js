@@ -438,7 +438,7 @@ function placePodiumPlayers() {
     cols = Math.max(1, Math.floor((floor.clientWidth - pad * 2) / (size + 4))),
     rows = Math.max(1, Math.floor((floor.clientHeight - pad * 2) / (size + 4)));
   const used = new Set();
-  for (const member of snapshot.members) {
+  for (const member of snapshot.members.slice(3)) {
     const slots = Array.from({ length: cols * rows }, (_, i) => i).filter(
       (i) => !used.has(i),
     );
