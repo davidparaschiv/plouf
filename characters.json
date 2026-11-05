@@ -1,0 +1,375 @@
+{
+  "N": 10,
+  "categories": {
+    "jungle": [
+      {
+        "id": 0,
+        "name": {
+          "en": "Panda",
+          "frr": "Panda"
+        },
+        "file": "character-0.png",
+        "original": true
+      },
+      {
+        "id": 1,
+        "name": {
+          "en": "Zebra",
+          "frr": "Zèbre"
+        },
+        "file": "character-1.png",
+        "original": true
+      },
+      {
+        "id": 4,
+        "name": {
+          "en": "Tiger",
+          "frr": "Tigre"
+        },
+        "file": "character-4.png",
+        "original": true
+      },
+      {
+        "id": 5,
+        "name": {
+          "en": "Giraffe",
+          "frr": "Girafe"
+        },
+        "file": "character-5.png",
+        "original": true
+      },
+      {
+        "id": 6,
+        "name": {
+          "en": "Monkey",
+          "frr": "Singe"
+        },
+        "file": "character-6.png",
+        "original": true
+      },
+      {
+        "id": 10,
+        "name": {
+          "en": "Mowgli",
+          "frr": "Mowgli"
+        },
+        "file": "character-10.png",
+        "brief": "An original friendly jungle explorer child with warm brown skin, short black hair, simple leaf-green jungle clothing and a small leaf accessory, modest head-and-shoulders portrait, original storybook design not a movie likeness"
+      },
+      {
+        "id": 11,
+        "name": {
+          "en": "Kaa",
+          "frr": "Kaa"
+        },
+        "file": "character-11.png",
+        "brief": "A friendly green python with a large expressive head on a small visible coil, leaf accessory, original design not a movie likeness"
+      },
+      {
+        "id": 12,
+        "name": {
+          "en": "Baloo",
+          "frr": "Baloo"
+        },
+        "file": "character-12.png",
+        "brief": "A friendly dark brown sloth bear with a round gentle face, cream muzzle and mint bandana, original design not a movie likeness"
+      },
+      {
+        "id": 13,
+        "name": {
+          "en": "Bagheera",
+          "frr": "Bagheera"
+        },
+        "file": "character-13.png",
+        "brief": "A friendly sleek black panther with large gentle green eyes, rounded ears and a mint leaf accessory, original design not a movie likeness"
+      },
+      {
+        "id": 14,
+        "name": {
+          "en": "Toucan",
+          "frr": "Toucan"
+        },
+        "file": "character-14.png",
+        "brief": "A friendly black toucan with a large colorful yellow-orange beak and bright gentle eyes"
+      }
+    ],
+    "christmas": [
+      {
+        "id": 2,
+        "name": {
+          "en": "Rabbit",
+          "frr": "Lapin"
+        },
+        "file": "character-2.png",
+        "original": true
+      },
+      {
+        "id": 3,
+        "name": {
+          "en": "Stag",
+          "frr": "Cerf"
+        },
+        "file": "character-3.png",
+        "original": true
+      },
+      {
+        "id": 15,
+        "name": {
+          "en": "Frosty",
+          "frr": "Frosty"
+        },
+        "file": "character-15.png",
+        "brief": "A friendly smiling snowman with carrot nose, mint winter scarf, raspberry pink wool hat and two coal buttons"
+      },
+      {
+        "id": 16,
+        "name": {
+          "en": "Santa",
+          "frr": "Père Noël"
+        },
+        "file": "character-16.png",
+        "brief": "A friendly Santa Claus head and shoulders with white beard, rosy cheeks, deep raspberry pink Santa hat and coat with soft white fur trim"
+      },
+      {
+        "id": 17,
+        "name": {
+          "en": "Elf",
+          "frr": "Lutin"
+        },
+        "file": "character-17.png",
+        "brief": "A friendly Christmas elf with pointed ears, mint green festive cap and raspberry pink scarf"
+      },
+      {
+        "id": 18,
+        "name": {
+          "en": "Penguin",
+          "frr": "Pingouin"
+        },
+        "file": "character-18.png",
+        "brief": "A friendly small black-and-white penguin with rosy cheeks, mint knitted scarf and raspberry winter ear muffs"
+      },
+      {
+        "id": 19,
+        "name": {
+          "en": "Polar bear",
+          "frr": "Ours polaire"
+        },
+        "file": "character-19.png",
+        "brief": "A friendly white polar bear cub in a raspberry pink winter scarf and mint beanie"
+      },
+      {
+        "id": 20,
+        "name": {
+          "en": "Gingerbread",
+          "frr": "Pain d’épices"
+        },
+        "file": "character-20.png",
+        "brief": "A friendly gingerbread cookie character with piped white icing smile and trim, mint icing buttons and raspberry bow tie"
+      },
+      {
+        "id": 21,
+        "name": {
+          "en": "Arctic fox",
+          "frr": "Renard polaire"
+        },
+        "file": "character-21.png",
+        "brief": "A friendly fluffy white arctic fox with soft blue-gray ear tips and mint winter scarf"
+      },
+      {
+        "id": 22,
+        "name": {
+          "en": "Nutcracker",
+          "frr": "Casse-noisette"
+        },
+        "file": "character-22.png",
+        "brief": "A friendly wooden nutcracker toy soldier with rounded kind face, mint and raspberry festive uniform and short toy hat"
+      }
+    ],
+    "forest": [
+      {
+        "id": 7,
+        "name": {
+          "en": "Siren",
+          "frr": "Sirène"
+        },
+        "file": "character-7.png",
+        "original": true
+      },
+      {
+        "id": 23,
+        "name": {
+          "en": "Fairy",
+          "frr": "Fée"
+        },
+        "file": "character-23.png",
+        "brief": "A friendly tiny fairy with mint iridescent translucent wings, flower crown and layered raspberry petal dress, head and shoulders with wings visible"
+      },
+      {
+        "id": 24,
+        "name": {
+          "en": "Unicorn",
+          "frr": "Licorne"
+        },
+        "file": "character-24.png",
+        "brief": "A friendly white unicorn with a single pearly spiral horn, mint and pink flowing mane and gentle eyes"
+      },
+      {
+        "id": 25,
+        "name": {
+          "en": "Dragon",
+          "frr": "Dragon"
+        },
+        "file": "character-25.png",
+        "brief": "A friendly baby mint green dragon with pink tiny horns and rounded little wings, soft innocent expressive face"
+      },
+      {
+        "id": 26,
+        "name": {
+          "en": "Fawkes",
+          "frr": "Fumseck"
+        },
+        "file": "character-26.png",
+        "brief": "A friendly young phoenix with orange-gold feathers, pink crest and mint magical accent, expressive kind bird face",
+        "interpretation": "Original styled mythical-creature interpretation; not a film likeness."
+      },
+      {
+        "id": 27,
+        "name": {
+          "en": "Buckbeak",
+          "frr": "Buck"
+        },
+        "file": "character-27.png",
+        "brief": "A friendly baby griffin with cream eagle head, gold beak, lion chest and tiny feathered wings, mint accent collar",
+        "interpretation": "Original styled mythical-creature interpretation; not a film likeness."
+      },
+      {
+        "id": 28,
+        "name": {
+          "en": "Pixie",
+          "frr": "Farfadet"
+        },
+        "file": "character-28.png",
+        "brief": "A friendly mischievous woodland pixie with pointed ears, mint leaf cap and raspberry vest, original fantasy character"
+      },
+      {
+        "id": 29,
+        "name": {
+          "en": "Forest spirit",
+          "frr": "Esprit des bois"
+        },
+        "file": "character-29.png",
+        "brief": "A friendly mythical forest spirit with round wood-textured face, small leafy antlers and soft moss hair, mint and pink flowers"
+      },
+      {
+        "id": 30,
+        "name": {
+          "en": "Mushroom sprite",
+          "frr": "Esprit champignon"
+        },
+        "file": "character-30.png",
+        "brief": "A friendly mythical mushroom sprite with a raspberry pink spotted cap, cream face and mint leaf scarf"
+      },
+      {
+        "id": 31,
+        "name": {
+          "en": "Pegasus",
+          "frr": "Pégase"
+        },
+        "file": "character-31.png",
+        "brief": "A friendly baby white winged horse with mint mane, small feathered wings and no horn"
+      }
+    ],
+    "underwater": [
+      {
+        "id": 8,
+        "name": {
+          "en": "Shark",
+          "frr": "Requin"
+        },
+        "file": "character-8.png",
+        "original": true
+      },
+      {
+        "id": 9,
+        "name": {
+          "en": "Nemo",
+          "frr": "Nemo"
+        },
+        "file": "character-9.png",
+        "original": true
+      },
+      {
+        "id": 32,
+        "name": {
+          "en": "Dolphin",
+          "frr": "Dauphin"
+        },
+        "file": "character-32.png",
+        "brief": "A friendly blue-gray dolphin with gentle eyes, happy rounded snout and soft mint highlights"
+      },
+      {
+        "id": 33,
+        "name": {
+          "en": "Sea turtle",
+          "frr": "Tortue de mer"
+        },
+        "file": "character-33.png",
+        "brief": "A friendly sea turtle with mint green head and flippers, warm rounded shell and raspberry coral accent"
+      },
+      {
+        "id": 34,
+        "name": {
+          "en": "Octopus",
+          "frr": "Poulpe"
+        },
+        "file": "character-34.png",
+        "brief": "A friendly raspberry pink octopus with large kind eyes and short curled tentacles"
+      },
+      {
+        "id": 35,
+        "name": {
+          "en": "Seahorse",
+          "frr": "Hippocampe"
+        },
+        "file": "character-35.png",
+        "brief": "A friendly golden seahorse with mint dorsal fin, pink cheeks and curled tail"
+      },
+      {
+        "id": 36,
+        "name": {
+          "en": "Jellyfish",
+          "frr": "Méduse"
+        },
+        "file": "character-36.png",
+        "brief": "A friendly translucent mint jellyfish with rounded cap, gentle face and soft raspberry pink trailing tentacles"
+      },
+      {
+        "id": 37,
+        "name": {
+          "en": "Ray",
+          "frr": "Raie"
+        },
+        "file": "character-37.png",
+        "brief": "A friendly small blue manta ray with rounded triangular wings, happy face and pale mint underside"
+      },
+      {
+        "id": 38,
+        "name": {
+          "en": "Pufferfish",
+          "frr": "Poisson-globe"
+        },
+        "file": "character-38.png",
+        "brief": "A friendly round yellow pufferfish with very soft rounded nubs, mint fins and pink cheeks"
+      },
+      {
+        "id": 39,
+        "name": {
+          "en": "Sebastian",
+          "frr": "Sébastien"
+        },
+        "file": "character-39.png",
+        "brief": "A friendly coral-pink crab with expressive eyes and rounded claws"
+      }
+    ]
+  }
+}

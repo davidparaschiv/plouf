@@ -115,5 +115,22 @@
       "prompt": "Use case: stylized-concept. Asset: polished mobile game Host role icon for Plouf. A delightful raspberry-pink and mint-green magical quiz conductor's wand crossing a small floating glossy mint crown, with three elegant tiny luminous sparkles and one translucent bubble. Premium tactile soft 3D clay and glass materials, refined commercial game UI quality, charming enchanted fantasy atmosphere. Palette mint #a8efd4 with deep raspberry pink #a52761, subtle warm white highlights. One compact cohesive symbol readable at 80px. Centered square composition with 12 percent transparent padding. Truly transparent background, no words, letters, frame, or watermark.",
       "edit": "Use case: precise-object-edit. Remove ONLY the glowing question mark from the pink star at the top of the wand. Fill its previous area with the same glossy raspberry-pink star material, matching adjacent shading and highlights seamlessly. Keep EVERYTHING ELSE exactly the same: wand shape, star silhouette, crown, ribbons, colors, jewel, bubbles, sparkles, proportions, composition, lighting and transparent alpha background. Do not replace the question mark with another symbol. No text. Preserve the existing transparency."
     }
+  },
+  "jungle": {
+    "desktopPrompt": "Use case: stylized-concept. Premium landscape 16:9 tropical JUNGLE environment for a game background. Dense untamed rainforest: gigantic monstera and banana leaves, tall palms, tangled hanging lianas, thick bamboo, buttress roots, glossy wet emerald leaves, deep jade and lime foliage, earthy muddy path leading through a natural sunlit clearing, a few small tropical red flowers near corners. Humid mist and warm sunlight filtering through a very dense high canopy. Rich highly detailed dimensional nature illustration with realistic botanical shapes and textures, cinematic adventure game environment. Keep a quieter central path suitable for overlaying quiz UI. It must feel tropical, wild and natural, NOT an enchanted fairy forest. NO people, children, animals, creatures, birds, fish, fairies, magic, glitter, crowns, lanterns, tree houses, buildings, ruins, arches, bridges or oversized fantasy flowers. No words or UI. Landscape widescreen composition.",
+    "mobilePrompt": "Portrait recomposition of the same natural tropical jungle: palms, monstera, banana leaves, bamboo, vines, buttress roots, central muddy path and natural sun. No people, animals or magic.",
+    "files": [
+      "jungle.png",
+      "jungle-mobile.png"
+    ]
+  },
+  "characterCollections": {
+    "catalog": "../characters.json",
+    "N": 10,
+    "total": 40,
+    "tool": "Built-in image generation",
+    "promptTemplate": "One transparent square mobile avatar. Subject: character brief in characters.json. Reference original Panda for polished soft 3D clay/felt materials and fine detail only. Centered portrait, generous transparent padding, readable at 48px, no backdrop, scenery, text or borders.",
+    "deliverySizeForNewCharacters": 384,
+    "originalCharacterFilesPreserved": true
   }
 }
