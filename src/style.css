@@ -1108,7 +1108,7 @@ header .header-note {
   justify-content: center;
   gap: 4px;
   padding: 7px 14px;
-  background: rgba(120, 120, 120, 0.3);
+  background: var(--podium-overlay);
   color: #142119;
   text-align: center;
   pointer-events: none;
@@ -1149,5 +1149,74 @@ header .header-note {
   font-weight: 700;
   line-height: 1.2;
   color: #17271d;
+  pointer-events: none;
+}
+
+/* Host answer key remains text, with colors supplied only by the host snapshot. */
+.answer.host-correct:disabled { background: #a8efd4; color: #075b35; border: 2px solid #168753; opacity: 1; }
+.answer.host-wrong:disabled { background: #f3b7c4; color: #85273c; border: 2px solid #bf4a65; opacity: 1; }
+.question-demo {
+  width: min(760px, calc(100vw - 24px));
+  max-height: calc(100svh - 24px);
+  border: 1px solid #ffffff99;
+  border-radius: 24px;
+  padding: 24px;
+  background-color: #f7faf7;
+  background-size: 100% 100%;
+  background-attachment: local;
+  color: #171c1b;
+  box-shadow: 0 18px 80px #14211955;
+  overflow-y: auto;
+}
+.question-demo::backdrop { background: #14211980; backdrop-filter: blur(6px); }
+.question-demo .question-card { margin-top: 12px; }
+.question-demo .answer { min-height: 100px; aspect-ratio: auto; }
+/* Reserve the viewport bottom for the fixed crowd, beneath the return button. */
+body.podium { --crowd-bottom: 0svh; --podium-header: 112px; --podium-overlay: rgba(120, 120, 120, 0.7); }
+body.podium:has(.winner-banner) { --crowd-bottom: 10svh; }
+body.podium main { min-height: 0; padding-block: 0; }
+.podium-screen {
+  height: calc(80svh - var(--crowd-bottom) - var(--podium-header));
+  min-height: 310px;
+  padding-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.podium-title {
+  background: var(--podium-overlay);
+  border-radius: 0;
+  padding: 12px 18px;
+  margin: 0;
+  width: 100vw;
+  max-width: none;
+  flex-shrink: 0;
+}
+.podium-title .eyebrow { color: #24342b; margin-bottom: 6px; }
+.podium-title h1 { font-size: clamp(24px, 4.8svh, 44px); margin: 0; }
+.podium-row { width: 100%; flex: 1; }
+.podium-screen .winner img { width: clamp(48px, 8svh, 84px); height: clamp(48px, 8svh, 84px); }
+.podium-screen .winner-name { margin-top: 5px; }
+.podium-screen .winner-points { margin-bottom: 8px; }
+.podium-screen .gold .step { height: clamp(55px, 14svh, 180px); }
+.podium-screen .silver .step { height: clamp(40px, 10svh, 130px); }
+.podium-screen .bronze .step { height: clamp(30px, 7svh, 100px); }
+.podium-actions { margin: 0; flex-shrink: 0; }
+.podium-floor { bottom: var(--crowd-bottom); height: 20svh; min-height: 0; }
+@media (max-width: 600px) { body.podium { --podium-header: 86px; } }
+
+.podium-place {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(5px, 1.5vw, 10px);
+}
+.podium-screen .step .podium-medal {
+  width: clamp(24px, 4.5svh, 38px);
+  height: clamp(30px, 5.6svh, 48px);
+  margin: 0;
+  object-fit: contain;
   pointer-events: none;
 }

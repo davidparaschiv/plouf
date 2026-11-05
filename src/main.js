@@ -34,6 +34,9 @@ document.addEventListener("pointerdown", () => music.unlock(), {
   passive: true,
 });
 document.addEventListener("keydown", () => music.unlock());
+// Click/touchend also provide Chrome's activation after a touch or early load tap.
+document.addEventListener("click", () => music.unlock(), { capture: true });
+document.addEventListener("touchend", () => music.unlock(), { passive: true });
 const app = document.querySelector("#app");
 const asset = (name) => `${import.meta.env.BASE_URL}assets/${name}`;
 const esc = (value) =>
@@ -145,8 +148,63 @@ function hostForm(reset = true) {
   if (roomId) return unlockForm();
   currentView = "host";
   if (reset) questions = null;
-  app.innerHTML = `<section class="panel">${back()}<h2>${t("hostTitle")}</h2><p class="muted">${t("hostNoteForm")}</p><form id="host-form" class="stack"><div><span class="field-label">${t("chooseWorld")}</span><div class="themes">${themes.map((theme) => `<button type="button" data-theme="${theme.id}" class="theme ${theme.id === selectedTheme ? "selected" : ""}" aria-pressed="${theme.id === selectedTheme}"><img src="${asset(theme.id + ".png")}" alt=""><span>${t(theme.id)}</span></button>`).join("")}</div></div><label class="upload"><span id="upload-label">${t("upload")}</span><input id="questions" type="file" accept="application/json,.json" required></label><a class="back" href="${import.meta.env.BASE_URL}example-questions.json" download style="margin:0">${t("example")}</a><div><label for="password">${t("password")}</label><input id="password" name="password" type="password" required minlength="4" placeholder="${t("passwordHint")}" autocomplete="new-password"></div><p class="error" id="form-error" hidden></p><button class="primary wide" type="submit">${t("create")}</button></form><button class="back" data-action="unlock" style="margin:20px 0 0">${t("existing")}</button></section>`;
+  app.innerHTML = `<section class="panel">${back()}<h2>${t("hostTitle")}</h2><p class="muted">${t("hostNoteForm")}</p><form id="host-form" class="stack"><div><span class="field-label">${t("chooseWorld")}</span><div class="themes">${themes.map((theme) => `<button type="button" data-theme="${theme.id}" class="theme ${theme.id === selectedTheme ? "selected" : ""}" aria-pressed="${theme.id === selectedTheme}"><img src="${asset(theme.id + ".png")}" alt=""><span>${t(theme.id)}</span></button>`).join("")}</div></div><label class="upload"><span id="upload-label">${t("upload")}</span><input id="questions" type="file" accept="application/json,.json" required></label><a class="back" href="${import.meta.env.BASE_URL}example-questions.json" download style="margin:0">${t("example")}</a><button type="button" class="back" data-action="demo" ${questions?.length ? "" : "disabled"} style="margin:0">${t("demoQuestions")}</button><div><label for="password">${t("password")}</label><input id="password" name="password" type="password" required minlength="4" placeholder="${t("passwordHint")}" autocomplete="new-password"></div><p class="error" id="form-error" hidden></p><button class="primary wide" type="submit">${t("create")}</button></form><button class="back" data-action="unlock" style="margin:20px 0 0">${t("existing")}</button></section>`;
 }
+
+async function openQuestionDemo() {
+  const data = questions;
+  if (!data?.length) return;
+  const previousTrack = music.track;
+  const dialog = document.createElement("dialog");
+  dialog.className = "question-demo";
+  dialog.style.backgroundImage = `linear-gradient(#ffffff33,#ffffff33), url("${themeFile(selectedTheme)}")`;
+  let index = 0, transition;
+  const close = () => { clearTimeout(transition); dialog.close(); };
+  dialog.addEventListener("close", () => { clearTimeout(transition); music.setTrack(previousTrack); dialog.remove(); });
+  const draw = () => {
+    const q = data[index];
+    const answers = [q.C, q.W1, q.W2, q.W3].map((text, i) => ({ text, correct: i === 0 }));
+    for (let i = answers.length - 1; i > 0; i--) {
+      const range = i + 1, limit = Math.floor(4294967296 / range) * range;
+      let random;
+      do { random = crypto.getRandomValues(new Uint32Array(1))[0]; } while (random >= limit);
+      const j = random % range;
+      [answers[i], answers[j]] = [answers[j], answers[i]];
+    }
+    dialog.innerHTML = `<button type="button" class="back" data-close>${t("back")}</button><section class="question"><div class="question-top"><span>${index + 1} / ${data.length}</span></div><div class="question-card"><h2>${esc(q.Q)}</h2></div><div class="answers">${answers.map((a,i) => `<button type="button" class="answer" data-demo-answer="${i}"><span class="answer-copy"><span class="letter">${["A","B","C","D"][i]}</span>${esc(a.text)}</span></button>`).join("")}</div></section>`;
+    const sound = audioToggle.cloneNode(true);
+    sound.removeAttribute("id");
+    sound.onclick = () => {
+      const enabled = music.toggle();
+      audioToggle.setAttribute("aria-pressed", String(!enabled));
+      updateLanguageControls();
+      sound.setAttribute("aria-pressed", String(!enabled));
+      sound.setAttribute("aria-label", enabled ? t("mute") : t("unmute"));
+      sound.title = enabled ? t("mute") : t("unmute");
+    };
+    dialog.append(sound);
+    dialog.querySelector("[data-close]").onclick = close;
+    dialog.querySelectorAll("[data-demo-answer]").forEach((button) => {
+      button.onclick = () => {
+        dialog.querySelectorAll("[data-demo-answer]").forEach((b) => b.disabled = true);
+        const correct = answers[Number(button.dataset.demoAnswer)].correct;
+        button.classList.add(correct ? "is-correct" : "is-incorrect");
+        button.insertAdjacentHTML("beforeend", `<span class="answer-result" aria-hidden="true">${correct ? "✓" : "×"}</span>`);
+        if (!correct) {
+          const right = dialog.querySelector(`[data-demo-answer="${answers.findIndex((a) => a.correct)}"]`);
+          right.classList.add("is-correct");
+          right.insertAdjacentHTML("beforeend", '<span class="answer-result" aria-hidden="true">✓</span>');
+        }
+        transition = setTimeout(() => { index++; if (index === data.length) close(); else draw(); }, 1400);
+      };
+    });
+  };
+  document.body.append(dialog);
+  draw();
+  dialog.showModal();
+  music.setTrack(selectedTheme);
+}
+
 function unlockForm() {
   currentView = "unlock";
   app.innerHTML = `<section class="panel">${back()}<h2>${t("welcomeHost")}</h2><form id="unlock-form" class="stack"><div><label for="room">${t("roomId")}</label><input type="text" id="room" name="room" value="${esc(roomId)}" placeholder="PID-10020" required></div><div><label for="password">${t("password")}</label><input type="password" id="password" name="password" required minlength="4" autocomplete="current-password"></div><p class="error" id="form-error" hidden></p><button type="submit" class="primary">${t("enter")}</button></form></section>`;
@@ -221,6 +279,9 @@ async function preload() {
     ...themes.flatMap(({ id }) => [`${id}.png`, `${id}-mobile.png`]),
     "role-guest.png",
     "role-host.png",
+    "medal-gold.svg",
+    "medal-silver.svg",
+    "medal-bronze.svg",
   ];
   const total = images.length + MUSIC_TRACKS.length;
   let done = 0;
@@ -410,7 +471,8 @@ function renderQuestion() {
   )
     .map((text, i) => {
       const chosen = s.answer?.choice === i;
-      return `<button class="answer ${chosen ? "chosen " + (s.answer.correct ? "is-correct" : "is-incorrect") : ""}" data-answer="${i}" ${s.host || s.answer ? "disabled" : ""} aria-label="${chosen ? t(s.answer.correct ? "correct" : "incorrect") : esc(text)}"><span class="answer-copy"><span class="letter">${["A", "B", "C", "D"][i]}</span>${esc(text)}</span>${chosen ? `<span class="answer-result" aria-hidden="true">${s.answer.correct ? "✓" : "×"}</span>` : ""}</button>`;
+      const hostColor = s.host && Number.isInteger(s.correct_choice) ? (s.correct_choice === i ? "host-correct" : "host-wrong") : "";
+      return `<button class="answer ${hostColor} ${chosen ? "chosen " + (s.answer.correct ? "is-correct" : "is-incorrect") : ""}" data-answer="${i}" ${s.host || s.answer ? "disabled" : ""} aria-label="${chosen ? t(s.answer.correct ? "correct" : "incorrect") : esc(text)}"><span class="answer-copy"><span class="letter">${["A", "B", "C", "D"][i]}</span>${esc(text)}</span>${chosen ? `<span class="answer-result" aria-hidden="true">${s.answer.correct ? "✓" : "×"}</span>` : ""}</button>`;
     })
     .join(
       "",
@@ -422,11 +484,11 @@ function renderPodium() {
   app.innerHTML = `<section class="podium-screen"><div class="podium-title"><p class="eyebrow">${t("wrap")}</p><h1>${t("legendary")}</h1></div><div class="podium-row">${order
     .map((i) => {
       const m = winners[i];
-      return `<div class="winner ${["gold", "silver", "bronze"][i]}" data-place="${i + 1}" data-member="${esc(m.id)}">${avatar(m.character)}<span class="winner-name">${esc(m.name)}</span><span class="winner-points">${m.points.toLocaleString()} ${t("points")}</span><div class="step">${i + 1}</div></div>`;
+      return `<div class="winner ${["gold", "silver", "bronze"][i]}" data-place="${i + 1}" data-member="${esc(m.id)}">${avatar(m.character)}<span class="winner-name">${esc(m.name)}</span><span class="winner-points">${m.points.toLocaleString()} ${t("points")}</span><div class="step"><span class="podium-place"><img class="podium-medal" src="${asset(`medal-${["gold", "silver", "bronze"][i]}.svg`)}" alt="" aria-hidden="true" draggable="false"><span>${i + 1}</span></span></div></div>`;
     })
     .join(
       "",
-    )}</div>${winners.length ? "" : `<p class="muted" style="text-align:center">${t("noPlayers")}</p>`}<div class="room-actions" style="margin-top:35px">${snapshot.host ? `<button class="primary" data-action="start">${t("freshStart")}</button>` : `<button class="primary" data-action="home">${t("home")}</button>`}</div></section><div class="podium-floor" aria-label="${t("podiumPlayers")}"></div>`;
+    )}</div>${winners.length ? "" : `<p class="muted" style="text-align:center">${t("noPlayers")}</p>`}<div class="room-actions podium-actions">${snapshot.host ? `<button class="primary" data-action="start">${t("freshStart")}</button>` : `<button class="primary" data-action="home">${t("home")}</button>`}</div></section><div class="podium-floor" aria-label="${t("podiumPlayers")}"></div>`;
   const me = snapshot.members.find(
     (member) => member.id === snapshot.member_id,
   );
@@ -448,22 +510,30 @@ function placePodiumPlayers() {
     cols = Math.max(1, Math.floor((floor.clientWidth - pad * 2) / (size + 4))),
     rows = Math.max(1, Math.floor((floor.clientHeight - pad * 2) / (size + 4)));
   const used = new Set();
+  const placed = [];
+  const gridX = (slot) => pad + (slot % cols) * Math.max(0, (floor.clientWidth - size - pad * 2) / Math.max(1, cols - 1));
+  const gridY = (slot) => pad + Math.floor(slot / cols) * Math.max(0, (floor.clientHeight - size - pad * 2) / Math.max(1, rows - 1));
   for (const member of snapshot.members.slice(3)) {
     const slots = Array.from({ length: cols * rows }, (_, i) => i).filter(
       (i) => !used.has(i),
     );
-    const slot = slots.length
-      ? slots[Math.floor(Math.random() * slots.length)]
-      : Math.floor(Math.random() * cols * rows);
+    // Choose the free slot farthest from its nearest occupied neighbor.
+    // Randomize ties so the crowd still has a fresh arrangement each time.
+    const available = slots.length ? slots : Array.from({ length: cols * rows }, (_, i) => i);
+    const distance = (slot) => placed.length ? Math.min(...placed.map((p) => Math.hypot(gridX(slot) - p.x, gridY(slot) - p.y))) : 0;
+    const best = Math.max(...available.map(distance));
+    const candidates = available.filter((slot) => distance(slot) === best);
+    const slot = candidates[Math.floor(Math.random() * candidates.length)];
     used.add(slot);
     const x = Math.min(
         floor.clientWidth - size - pad,
-        pad + (slot % cols) * (size + 4),
+        gridX(slot),
       ),
       y = Math.min(
         floor.clientHeight - size - pad,
-        pad + Math.floor(slot / cols) * (size + 4),
+        gridY(slot),
       );
+    placed.push({ x, y });
     const el = document.createElement("div");
     el.className = "podium-roamer";
     el.style.cssText = `left:${x}px;top:${y}px;width:${size}px;height:${size}px`;
@@ -474,16 +544,10 @@ function placePodiumPlayers() {
         i === 0
           ? { x: 0, y: 0 }
           : {
-              x:
-                Math.random() *
-                  Math.max(0, floor.clientWidth - size - pad * 2) +
-                pad -
-                x,
-              y:
-                Math.random() *
-                  Math.max(0, floor.clientHeight - size - pad * 2) +
-                pad -
-                y,
+              x: Math.max(pad, Math.min(floor.clientWidth - size - pad,
+                x + (Math.random() - 0.5) * 14)) - x,
+              y: Math.max(pad, Math.min(floor.clientHeight - size - pad,
+                y + (Math.random() - 0.5) * 14)) - y,
             },
       );
       points.push(points[0]);
@@ -569,6 +633,7 @@ app.addEventListener("click", async (e) => {
   if (answer) return submitAnswer(Number(answer.dataset.answer), elapsedMs);
   const action = e.target.closest("[data-action]")?.dataset.action;
   if (!action) return;
+  if (action === "demo") return openQuestionDemo();
   if (action === "home") {
     roomId = "";
     history.replaceState(null, "", location.pathname);
@@ -621,10 +686,12 @@ app.addEventListener("input", (event) => {
 app.addEventListener("change", async (e) => {
   if (e.target.id !== "questions") return;
   questions = null;
+  app.querySelector('[data-action="demo"]').disabled = true;
   try {
     const file = e.target.files[0];
     if (!file) return;
     questions = validateQuestions(JSON.parse(await file.text()));
+    app.querySelector('[data-action="demo"]').disabled = !questions.length;
     document.querySelector("#upload-label").textContent = t("questionFile", {
       count: questions.length,
       name: file.name,
@@ -705,6 +772,7 @@ async function boot() {
     updateLanguageControls();
     await preload();
     home();
+    music.unlock();
   } catch (error) {
     app.innerHTML = `<section class="loader"><p class="error">${esc(error.message)}</p><button class="primary" id="retry">${t("retry")}</button></section>`;
     document.querySelector("#retry").onclick = () => location.reload();

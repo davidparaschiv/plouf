@@ -98,10 +98,31 @@ test("all theme songs preload once; muting and track changes do not fetch or ove
   assert.equal(music.enabled, true);
   assert.equal(sources.length, 3);
   assert.equal(sources[2].buffer, music.buffers.get("podium"));
+  assert.equal(sources[2].loopStart, 25);
+  assert.equal(sources[2].loopEnd, 35);
   await music.preload((track) => track);
   assert.equal(
     fetched,
     MUSIC_TRACKS.length,
     "music is reused from decoded buffers",
   );
+});
+
+test('an interaction before preloading unlocks audio and playback starts when ready', async () => {
+  let starts = 0, resumes = 0;
+  const context = {
+    state: 'suspended', destination: {}, createBuffer: buffer,
+    createGain: () => ({ gain: { value: 0 }, connect() {} }),
+    decodeAudioData: async () => buffer(),
+    resume: async () => { resumes++; context.state = 'running'; },
+    createBufferSource: () => ({ connect() {}, start() { starts++; }, stop() {}, disconnect() {} }),
+  };
+  const music = new RoomMusic({ createContext: () => context,
+    fetchAudio: async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(0) }) });
+  music.setTrack('lobby');
+  music.unlock();
+  await music.preload(track => track);
+  assert.equal(resumes, 1);
+  assert.equal(starts, 1);
+  assert.equal(music.enabled, true);
 });

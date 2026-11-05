@@ -104,7 +104,9 @@
     "wordNote": "Plouf is a French word, used to imitate the sound of someone falling into water by accident!",
     "wonFirst": "You have won 1st place!",
     "wonSecond": "You have won 2nd place!",
-    "dragLower": "You can drag lower-ranked players off the podium."
+    "dragLower": "You can drag lower-ranked players off the podium.",
+    "demoQuestions": "Demo questions ↗",
+    "refreshVersion": "A new version is available. Refresh this page to answer."
   },
   "frr": {
     "header": "un peu de compétition entre amis",
@@ -211,6 +213,8 @@
     "wordNote": "Plouf est un mot français qui imite le bruit de quelqu’un qui tombe dans l’eau par accident !",
     "wonFirst": "Vous avez remporté la 1re place !",
     "wonSecond": "Vous avez remporté la 2e place !",
-    "dragLower": "Vous pouvez faire glisser les joueurs moins bien classés hors du podium."
+    "dragLower": "Vous pouvez faire glisser les joueurs moins bien classés hors du podium.",
+    "demoQuestions": "Essayer les questions ↗",
+    "refreshVersion": "Une nouvelle version est disponible. Actualisez cette page pour répondre."
   }
 }

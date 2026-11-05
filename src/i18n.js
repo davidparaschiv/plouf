@@ -37,6 +37,7 @@ export function translatedRank(number) {
 export function errorText(error) {
   const message = error?.message ?? String(error);
   const exact = {
+    "A new version is available. Refresh this page to answer.": "refreshVersion",
     "Upload a JSON array of questions.": "jsonArray",
     "Upload your questions first.": "uploadFirst",
     "Room not found.": "roomMissing",
