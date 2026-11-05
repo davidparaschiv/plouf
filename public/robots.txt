@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://plouf.space/sitemap.xml
