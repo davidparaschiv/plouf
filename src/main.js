@@ -1,4 +1,6 @@
 import "./style.css";
+import { ResponseClock } from "./response-clock.js";
+const responseClock = new ResponseClock();
 import { PodiumInteraction } from "./podium.js";
 const podiumInteraction = new PodiumInteraction();
 import { loadCharacters, themeCharacters } from "./characters.js";
@@ -70,6 +72,7 @@ function toast(message) {
   toast.timer = setTimeout(() => el.classList.remove("visible"), 4500);
 }
 function clearRoom() {
+  responseClock.reset();
   podiumInteraction.dispose();
   clearTimeout(pollTimer);
   snapshot = null;
@@ -314,6 +317,13 @@ function renderRoom() {
   currentView = "room";
   setWorld();
   const s = snapshot;
+  if ((s.phase === "countdown" || s.phase === "question") && s.deadline) {
+    // Anchor zero to the countdown deadline, independently of question loading.
+    const countdownEnd = new Date(s.deadline).getTime() -
+      (s.phase === "question" ? 15000 : 0);
+    responseClock.arm(`${roomId}:${s.session_id}:${s.question_index}`,
+      countdownEnd - Date.now() - offset);
+  }
   const sig = JSON.stringify([
     s.phase,
     s.question_index,
@@ -512,7 +522,7 @@ function updateTimer() {
     app.querySelectorAll("[data-answer]").forEach((b) => (b.disabled = true));
 }
 setInterval(updateTimer, 100);
-async function submitAnswer(choice) {
+async function submitAnswer(choice, elapsedMs) {
   if (answerPending || snapshot.host || snapshot.answer) return;
   answerPending = true;
   app.querySelectorAll("[data-answer]").forEach((b) => (b.disabled = true));
@@ -522,6 +532,7 @@ async function submitAnswer(choice) {
       p_session: snapshot.session_id,
       p_question: snapshot.question_index,
       p_choice: choice,
+      p_elapsed_ms: elapsedMs,
     });
     snapshot.answer = data;
     answerRevealUntil = Date.now() + 1000;
@@ -535,6 +546,7 @@ async function submitAnswer(choice) {
   }
 }
 app.addEventListener("click", async (e) => {
+  const elapsedMs = responseClock.elapsed();
   const character = e.target.closest("[data-character]");
   if (character) {
     selected = Number(character.dataset.character);
@@ -554,7 +566,7 @@ app.addEventListener("click", async (e) => {
     return;
   }
   const answer = e.target.closest("[data-answer]");
-  if (answer) return submitAnswer(Number(answer.dataset.answer));
+  if (answer) return submitAnswer(Number(answer.dataset.answer), elapsedMs);
   const action = e.target.closest("[data-action]")?.dataset.action;
   if (!action) return;
   if (action === "home") {
