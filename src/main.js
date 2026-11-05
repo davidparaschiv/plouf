@@ -303,7 +303,7 @@ async function preload() {
       }),
     ),
     music.preload(
-      (track) => `${import.meta.env.BASE_URL}audio/${track}.mp3`,
+      (track) => `${import.meta.env.BASE_URL}audio/${track}-v2.mp3`,
       loaded,
     ),
   ]);

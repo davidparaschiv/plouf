@@ -1109,7 +1109,7 @@ header .header-note {
   gap: 4px;
   padding: 7px 14px;
   background: var(--podium-overlay);
-  color: #142119;
+  color: var(--pink);
   text-align: center;
   pointer-events: none;
   font-size: clamp(11px, 2.8vw, 14px);
@@ -1186,7 +1186,7 @@ body.podium main { min-height: 0; padding-block: 0; }
   gap: 10px;
 }
 .podium-title {
-  background: var(--podium-overlay);
+  background: transparent;
   border-radius: 0;
   padding: 12px 18px;
   margin: 0;
@@ -1196,6 +1196,10 @@ body.podium main { min-height: 0; padding-block: 0; }
 }
 .podium-title .eyebrow { color: #24342b; margin-bottom: 6px; }
 .podium-title h1 { font-size: clamp(24px, 4.8svh, 44px); margin: 0; }
+.podium-title h1,
+.winner-banner strong {
+  color: var(--pink);
+}
 .podium-row { width: 100%; flex: 1; }
 .podium-screen .winner img { width: clamp(48px, 8svh, 84px); height: clamp(48px, 8svh, 84px); }
 .podium-screen .winner-name { margin-top: 5px; }
