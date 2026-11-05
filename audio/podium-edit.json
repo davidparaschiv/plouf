@@ -1,0 +1,12 @@
+{
+  "source": "User-provided Queen - We Are The Champions (Instrumental) [VKcSCHbgivE].mp3",
+  "source_intro_start_seconds": 109.0,
+  "source_intro_end_seconds": 134.0,
+  "intro_seconds": 25,
+  "selected_source_loop_start_seconds": 117.76,
+  "selected_source_loop_end_seconds": 127.76,
+  "loop_start_seconds": 25,
+  "loop_end_seconds": 35,
+  "intro_fade_in_seconds": 0.45,
+  "equal_power_crossfade_seconds": 0.45
+}

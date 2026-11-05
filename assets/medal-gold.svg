@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="80" viewBox="0 0 64 80">
+<defs><linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff3b5"/><stop offset=".48" stop-color="#edb934"/><stop offset="1" stop-color="#b67a12"/></linearGradient><linearGradient id="ribbon" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#cf548d"/><stop offset="1" stop-color="#88204e"/></linearGradient></defs>
+<path d="M15 3h13l10 23-12 8L15 8Z" fill="url(#ribbon)"/><path d="M36 3h13L38 29l-12-3Z" fill="#a8efd4"/><path d="m41 3-9 22" stroke="#72c7a6" stroke-width="3"/>
+<circle cx="32" cy="48" r="27" fill="#b67a12" opacity=".2"/><circle cx="32" cy="46" r="27" fill="url(#metal)" stroke="#fff3b5" stroke-width="2"/><circle cx="32" cy="46" r="21" fill="none" stroke="#b67a12" stroke-width="1.5" opacity=".65"/><path d="m32 30 4.5 9.3 10.3 1.5-7.4 7.2 1.7 10.2L32 53.4l-9.1 4.8 1.7-10.2-7.4-7.2 10.3-1.5Z" fill="#8a5a0c" opacity=".75"/><path d="M13 40a20 20 0 0 1 17-14" fill="none" stroke="white" stroke-linecap="round" stroke-width="3" opacity=".65"/>
+</svg>
