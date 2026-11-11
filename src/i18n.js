@@ -38,6 +38,13 @@ export function errorText(error) {
   const message = error?.message ?? String(error);
   const exact = {
     "A new version is available. Refresh this page to answer.": "refreshVersion",
+    "Choose a supported duration.": "durationInvalid",
+    "Enter a theme hint (1–160 characters).": "hintInvalid",
+    "Enter an item.": "itemEmpty",
+    "All items found. Wait for the others.": "itemsDone",
+    "Items must be a JSON array of strings.": "itemsInvalid",
+    "Item names must be unique, including without accents.": "itemsUnique",
+    "Upload a PNG painting first.": "paintingInvalid",
     "Upload a JSON array of questions.": "jsonArray",
     "Upload your questions first.": "uploadFirst",
     "Room not found.": "roomMissing",

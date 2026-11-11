@@ -1,4 +1,6 @@
 import "./style.css";
+import {validateItems, createPaintingRoom, preloadPainting, paintingHostForm, renderPainting} from './painting.js';
+let hostType = 'v1', paintingImage = '', itemPending = false;
 import { ResponseClock } from "./response-clock.js";
 const responseClock = new ResponseClock();
 import { PodiumInteraction } from "./podium.js";
@@ -12,7 +14,7 @@ import {
   rankingMarkers,
 } from "./rules.js";
 import { rpc } from "./api.js";
-import { setAtmosphere, reward } from "./effects.js";
+import { setAtmosphere, reward, itemReward } from "./effects.js";
 import { RoomMusic, MUSIC_TRACKS } from "./music.js";
 import {
   loadLanguages,
@@ -147,8 +149,9 @@ async function findGuestRoom() {
 function hostForm(reset = true) {
   if (roomId) return unlockForm();
   currentView = "host";
-  if (reset) questions = null;
-  app.innerHTML = `<section class="panel">${back()}<h2>${t("hostTitle")}</h2><p class="muted">${t("hostNoteForm")}</p><form id="host-form" class="stack"><div><span class="field-label">${t("chooseWorld")}</span><div class="themes">${themes.map((theme) => `<button type="button" data-theme="${theme.id}" class="theme ${theme.id === selectedTheme ? "selected" : ""}" aria-pressed="${theme.id === selectedTheme}"><img src="${asset(theme.id + ".png")}" alt=""><span>${t(theme.id)}</span></button>`).join("")}</div></div><label class="upload"><span id="upload-label">${t("upload")}</span><input id="questions" type="file" accept="application/json,.json" required></label><a class="back" href="${import.meta.env.BASE_URL}example-questions.json" download style="margin:0">${t("example")}</a><button type="button" class="back" data-action="demo" ${questions?.length ? "" : "disabled"} style="margin:0">${t("demoQuestions")}</button><div><label for="password">${t("password")}</label><input id="password" name="password" type="password" required minlength="4" placeholder="${t("passwordHint")}" autocomplete="new-password"></div><p class="error" id="form-error" hidden></p><button class="primary wide" type="submit">${t("create")}</button></form><button class="back" data-action="unlock" style="margin:20px 0 0">${t("existing")}</button></section>`;
+  if (reset) { questions = null; hostType = 'v1'; }
+  if (hostType === 'v2') { app.innerHTML = paintingHostForm(esc,back()); return; }
+  app.innerHTML = `<section class="panel">${back()}<h2>${t("hostTitle")}</h2><p class="muted">${t("hostNoteForm")}</p><form id="host-form" class="stack"><div><span class="field-label">${t("chooseWorld")}</span><div class="themes">${themes.map((theme) => `<button type="button" data-theme="${theme.id}" class="theme ${theme.id === selectedTheme ? "selected" : ""}" aria-pressed="${theme.id === selectedTheme}"><img src="${asset(theme.id + ".png")}" alt=""><span>${t(theme.id)}</span></button>`).join("")}</div></div><label class="upload"><span id="upload-label">${t("upload")}</span><input id="questions" type="file" accept="application/json,.json" required></label><a class="back" href="${import.meta.env.BASE_URL}example-questions.json" download style="margin:0">${t("example")}</a><button type="button" class="back" data-action="json-guide-v1" style="margin:0">${t("jsonGuide")}</button><button type="button" class="back" data-action="demo" ${questions?.length ? "" : "disabled"} style="margin:0">${t("demoQuestions")}</button><div><label for="password">${t("password")}</label><input id="password" name="password" type="password" required minlength="4" placeholder="${t("passwordHint")}" autocomplete="new-password"></div><p class="error" id="form-error" hidden></p><button type="button" class="try-v2" data-action="rooms-v2">TRY Rooms V2 ↗</button><button class="primary wide" type="submit">${t("create")}</button></form><button class="back" data-action="unlock" style="margin:20px 0 0">${t("existing")}</button></section>`;
 }
 
 async function openQuestionDemo() {
@@ -205,6 +208,19 @@ async function openQuestionDemo() {
   music.setTrack(selectedTheme);
 }
 
+function openUploadGuide(action) {
+  const dialog = document.createElement('dialog');
+  dialog.className = 'upload-guide';
+  const mode = action === 'painting-guide' ? 'photo' : action.endsWith('v2') ? 'v2' : 'v1';
+  dialog.innerHTML = `<button type="button" class="back">${t('back')}</button><h2>${t(mode === 'photo' ? 'paintingGuide' : 'jsonGuide')}</h2><p>${t('guide'+mode)}</p>${mode === 'photo' ? '' : `<pre>${esc(mode === 'v2' ? '["une fenêtre", "a blue chair", "un cœur"]' : JSON.stringify([{Q:'Your question?',C:'Correct answer',W1:'Wrong answer 1',W2:'Wrong answer 2',W3:'Wrong answer 3'}],null,2))}</pre><p>${t('guideSave')}</p>`}`;
+  dialog.querySelector('button').onclick = () => dialog.close();
+  dialog.addEventListener('close',()=>dialog.remove(),{once:true});
+  document.body.append(dialog);
+  dialog.showModal();
+  const sound = audioToggle.cloneNode(true); sound.removeAttribute('id');
+  sound.onclick = () => { audioToggle.click(); sound.setAttribute('aria-pressed',audioToggle.getAttribute('aria-pressed')); sound.setAttribute('aria-label',audioToggle.getAttribute('aria-label')); };
+  dialog.append(sound);
+}
 function unlockForm() {
   currentView = "unlock";
   app.innerHTML = `<section class="panel">${back()}<h2>${t("welcomeHost")}</h2><form id="unlock-form" class="stack"><div><label for="room">${t("roomId")}</label><input type="text" id="room" name="room" value="${esc(roomId)}" placeholder="PID-10020" required></div><div><label for="password">${t("password")}</label><input type="password" id="password" name="password" required minlength="4" autocomplete="current-password"></div><p class="error" id="form-error" hidden></p><button type="submit" class="primary">${t("enter")}</button></form></section>`;
@@ -228,12 +244,13 @@ function updateLanguageControls() {
 }
 function redrawLanguage() {
   updateLanguageControls();
-  const fields = [...app.querySelectorAll("input")].map((input) => ({
+  const fields = [...app.querySelectorAll("input,select")].map((input) => ({
     id: input.id,
     value: input.value,
     element: input.type === "file" ? input : null,
   }));
   if (currentView === "room") {
+    if (snapshot?.phase === 'painting') app.innerHTML = '';
     signature = "";
     renderRoom();
   } else if (currentView === "guest") guestForm();
@@ -333,6 +350,10 @@ async function poll() {
       );
       return;
     }
+    if (result.data.type === 'v2' && result.data.image_path && result.data.phase !== 'finished') {
+      paintingImage = await preloadPainting(result.data.image_path);
+      if (id !== roomId) return;
+    }
     snapshot = result.data;
     offset = result.offset;
     if (lastSession && lastSession !== snapshot.session_id) {
@@ -355,7 +376,8 @@ async function poll() {
   }
   pollTimer = setTimeout(
     poll,
-    snapshot?.phase === "waiting" || snapshot?.phase === "closed" ? 1000 : 500,
+    snapshot?.phase === "waiting" || snapshot?.phase === "closed" ? 1000 :
+      snapshot?.type === 'v2' && snapshot?.host && snapshot.phase === 'painting' ? 3000 : snapshot?.type === 'v2' && snapshot.phase === 'painting' ? 1000 : 500,
   );
 }
 function themeFile(theme) {
@@ -378,7 +400,7 @@ function renderRoom() {
   currentView = "room";
   setWorld();
   const s = snapshot;
-  if ((s.phase === "countdown" || s.phase === "question") && s.deadline) {
+  if (s.type !== "v2" && (s.phase === "countdown" || s.phase === "question") && s.deadline) {
     // Anchor zero to the countdown deadline, independently of question loading.
     const countdownEnd = new Date(s.deadline).getTime() -
       (s.phase === "question" ? 15000 : 0);
@@ -394,6 +416,8 @@ function renderRoom() {
       : s.members.map((m) => [m.id, m.points]),
     s.answer,
     s.host,
+    s.found_items,
+    locale(),
   ]);
   if (sig === signature) {
     updateTimer();
@@ -403,6 +427,7 @@ function renderRoom() {
   if (s.phase !== "finished") podiumInteraction.dispose();
   if (s.phase === "waiting" || s.phase === "closed") renderWaiting();
   else if (s.phase === "countdown") renderCountdown();
+  else if (s.phase === "painting") renderPainting(app,s,esc,avatar,paintingImage,translatedRank);
   else if (s.phase === "question") renderQuestion();
   else if (s.phase === "finished") renderPodium();
   updateTimer();
@@ -499,6 +524,9 @@ function renderPodium() {
       `<aside class="winner-banner"><strong>${t(Number(me.rank) === 1 ? "wonFirst" : "wonSecond")}</strong><span>${t("dragLower")}</span></aside>`,
     );
   }
+  if (snapshot.type === 'v2' && !snapshot.host && Number(me?.rank)>3) {
+    app.insertAdjacentHTML('beforeend', `<div class="painting-final-rank">${translatedRank(Number(me.rank))} · ${me.points} ${t('points')}</div>`);
+  }
   podiumInteraction.mount(app, snapshot);
   placePodiumPlayers();
 }
@@ -582,10 +610,38 @@ function updateTimer() {
     ),
   );
   el.textContent = left;
+  if (snapshot.type === 'v2' && snapshot.phase === 'painting' && left === 0)
+    app.querySelectorAll('#guess-form input,#guess-form button').forEach(b=>b.disabled=true);
   if (snapshot.phase === "question" && left === 0)
     app.querySelectorAll("[data-answer]").forEach((b) => (b.disabled = true));
 }
 setInterval(updateTimer, 100);
+async function submitItem(form) {
+  if (itemPending || snapshot?.phase !== 'painting' || snapshot.host) return;
+  const input = form.querySelector('input');
+  const guess = input.value;
+  if (!guess.trim()) return;
+  itemPending = true;
+  form.querySelector('button').disabled = true;
+  const session = snapshot.session_id, id = roomId;
+  try {
+    const {data} = await call('submit_item',{p_room:id,p_session:session,p_guess:guess});
+    if (roomId !== id || snapshot.session_id !== session) return;
+    input.value = '';
+    if (!data.duplicate) {
+      itemReward(data.correct);
+      toast(data.correct ? '+500 p' : '−100 p');
+    } else toast(t('itemRepeated'));
+    await poll();
+  } catch(error) { toast(errorText(error)); }
+  finally {
+    itemPending = false;
+    if (form.isConnected) {
+      form.querySelector('button').disabled = input.disabled;
+      if (!input.disabled) input.focus();
+    }
+  }
+}
 async function submitAnswer(choice, elapsedMs) {
   if (answerPending || snapshot.host || snapshot.answer) return;
   answerPending = true;
@@ -633,6 +689,11 @@ app.addEventListener("click", async (e) => {
   if (answer) return submitAnswer(Number(answer.dataset.answer), elapsedMs);
   const action = e.target.closest("[data-action]")?.dataset.action;
   if (!action) return;
+  if (action === 'painting-guide' || action?.startsWith('json-guide-')) { openUploadGuide(action); return; }
+  if (action === 'rooms-v2' || action === 'rooms-v1') {
+    hostType = action === 'rooms-v2' ? 'v2' : 'v1';
+    hostForm(false); window.scrollTo({top:0}); return;
+  }
   if (action === "demo") return openQuestionDemo();
   if (action === "home") {
     roomId = "";
@@ -684,6 +745,11 @@ app.addEventListener("input", (event) => {
   }
 });
 app.addEventListener("change", async (e) => {
+  if (e.target.id === 'painting' || e.target.id === 'items-json') {
+    const label = app.querySelector(e.target.id === 'painting' ? '#painting-label' : '#items-label');
+    label.textContent = e.target.files[0]?.name || t(e.target.id === 'painting' ? 'paintingUpload' : 'itemsUpload');
+    return;
+  }
   if (e.target.id !== "questions") return;
   questions = null;
   app.querySelector('[data-action="demo"]').disabled = true;
@@ -704,6 +770,7 @@ app.addEventListener("change", async (e) => {
 });
 app.addEventListener("submit", async (e) => {
   e.preventDefault();
+  if (e.target.id === 'guess-form') { await submitItem(e.target); return; }
   if (busy) return;
   busy = true;
   const button = e.target.querySelector("[type=submit]");
@@ -712,7 +779,10 @@ app.addEventListener("submit", async (e) => {
   errorEl.hidden = true;
   try {
     const fields = new FormData(e.target);
-    if (e.target.id === "host-form") {
+    if (e.target.id === 'host-v2-form') {
+      const items = validateItems(JSON.parse(await fields.get('items').text()));
+      roomId = await createPaintingRoom({file:fields.get('painting'),items,password:fields.get('password'),hint:fields.get('hint'),duration:Number(fields.get('duration'))});
+    } else if (e.target.id === "host-form") {
       if (!questions) throw Error("Upload your questions first.");
       const { data } = await call("create_room", {
         p_theme: selectedTheme,

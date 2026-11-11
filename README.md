@@ -112,3 +112,21 @@ The host form’s “Demo questions” link previews the currently uploaded JSON
 The supplied podium recording uses source 1:49–2:14 as a 25-second intro, then loops source 1:57.76–2:07.76. It has a 0.45-second opening fade and equal-power crossfades into and around the loop. The podium loop has no silence gap; other music keeps its 1.75-second repeat gap. Edit details are in `public/audio/podium-edit.json`.
 
 After syncing migrations, publish the matching frontend and refresh any already-open game tabs. Cached old clients omit `p_elapsed_ms`; the compatibility RPC requests a refresh rather than fabricating response times.
+
+## Painting rooms V2
+
+Classic rooms default to `type = v1`; their existing flow and scoring remain. The host form's **TRY Rooms V2** button opens the painting room form. V2 uses the magical-forest characters, atmosphere and music, and reuses the existing lobby, Start/Play controls, room URL/password, sound toggle and final podium.
+
+Upload one PNG (up to 5 MB), enter a textual theme hint, choose 30, 60, 120 or 300 seconds, and upload `items.json`. A square image is recommended, but other PNG proportions are accepted and stretched without cropping. Put relevant items and optional distractors in the picture; the JSON contains **only correct names**, for example:
+
+```json
+["une fenêtre", "a blue chair", "un cœur"]
+```
+
+Each entry is one distinct item, not an alternative spelling of another entry. Arbitrary Unicode is accepted independently of the EN/FR interface language. Database values retain their accents and are normalized to lowercase with collapsed whitespace. Matching additionally ignores accents and expands ligatures (`cœur` / `coeur`); it does not translate `apple` to `pomme`. Names that collide under this normalization are rejected. Both host forms have EN/FR JSON guides and downloadable examples; V2 also has an image guide.
+
+After 3–2–1, players type an item and press Enter. Each first correct item gives 500 points and each first incorrect guess costs 100; repeated normalized guesses have no further effect. A player who finds everything waits until all members finish or the shared server deadline expires. Host standings poll every 3 seconds during play; players poll every second, see their score and participant count, and receive no live ranking or other players' scores from the API. Non-podium players see their final rank at the top right. Restarting clears members, guesses and scores while retaining the painting and accepted items.
+
+Apply `202611110001_painting_rooms.sql` with the sync script **before deploying the new frontend**. It adds room types, private painting/guess tables, RPCs and a private `paintings` Storage bucket with authenticated upload/read policies. Images are uploaded under the creator's user ID and accessed through signed URLs, decoded before the game begins. The frontend never uploads the entire JSON file to Storage; it sends the parsed list to the creation RPC. No migration or remote Supabase command was run during this implementation.
+
+`npm run test:integration` executes the SQL migrations and V1/V2 lifecycles against isolated PGlite PostgreSQL with real pgcrypto/unaccent extensions and lightweight Auth/Storage schema fixtures. It covers Unicode matching, duplicate scoring, authorization, hidden rankings, all durations, all-finished/timeout outcomes, restart and V1 regression. It does not contact Supabase or verify the hosted Auth/Storage HTTP services. `npm test` also covers the browser normalization rules. A live Supabase multiplayer check is still needed after migration.
