@@ -29,8 +29,8 @@ test("ordinal suffixes include the teens", () => {
     "111th",
   ]);
 });
-test("JSON accepts zero questions and preserves order without an artificial count limit", () => {
-  assert.deepEqual(validateQuestions([]), []);
+test("JSON requires a question and preserves order without an artificial upper count limit", () => {
+  assert.throws(()=>validateQuestions([]));
   const q = { Q: "Q", C: "C", W1: "A", W2: "B", W3: "D" };
   assert.equal(
     validateQuestions(Array.from({ length: 12000 }, () => q)).length,

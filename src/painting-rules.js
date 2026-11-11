@@ -12,6 +12,7 @@ export function itemMatches(guess,answer) {
 }
 export function validateItems(value) {
   if (!Array.isArray(value) || value.some(v => typeof v !== 'string' || !normalizeItem(v))) throw Error(t('itemsInvalid'));
+  if (!value.length) throw Error(t("itemsRequired"));
   const items = value.map(normalizeItem);
   if (new Set(items.map(itemKey)).size !== items.length) throw Error(t('itemsUnique'));
   return items;

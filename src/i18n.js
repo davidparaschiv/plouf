@@ -39,6 +39,9 @@ export function translatedRank(number) {
 export function errorText(error, fallbackKey) {
   const message = error?.message ?? String(error);
   const exact = {
+    "Add at least one complete question.": "questionsRequired",
+    "Add at least one correct answer.": "itemsRequired",
+    "Every question needs Q, C, W1, W2, W3 and four distinct answers.": "questionsRequired",
     "A new version is available. Refresh this page to answer.": "refreshVersion",
     "Use a description of at most four words.": "descriptionLimit",
     "This description is already used. Choose the preset or a different description.": "descriptionTaken",

@@ -1,3 +1,4 @@
+import {t} from './i18n.js';
 export {allCharacters as characters} from './characters.js';
 export const themes = [
   { id: "jungle", name: "Jungle", note: "Into the wild" },
@@ -7,11 +8,12 @@ export const themes = [
 ];
 export function validateQuestions(value) {
   if (!Array.isArray(value)) throw Error("Upload a JSON array of questions.");
+  if (!value.length) throw Error(t("questionsRequired"));
   return value.map((q, i) => {
     for (const key of ["Q", "C", "W1", "W2", "W3"])
       if (typeof q?.[key] !== "string" || !q[key].trim())
         throw Error(`Question ${i + 1}: ${key} must be text.`);
-    if (new Set([q.C, q.W1, q.W2, q.W3]).size !== 4)
+    if (new Set([q.C, q.W1, q.W2, q.W3].map(v=>v.trim())).size !== 4)
       throw Error(`Question ${i + 1}: answers must be different.`);
     return Object.fromEntries(
       ["Q", "C", "W1", "W2", "W3"].map((k) => [k, q[k]]),

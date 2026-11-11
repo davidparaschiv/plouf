@@ -11,7 +11,7 @@ test('painting answers preserve Unicode and match accents, ligatures, case and w
  assert.deepEqual(validateItems(['été','BLUE Chair','猫']),['été','blue chair','猫']);
  assert.throws(()=>validateItems(['boîte','boite']));
  assert.throws(()=>validateItems([3]));
- assert.deepEqual(validateItems([]),[]);
+ assert.throws(()=>validateItems([]));
 });
 
 

@@ -4,7 +4,7 @@ import {validateItems,itemKey,PaintingDemo,validateDescription} from './painting
 export {validateDescription} from './painting-rules.js';
 import {preloadPainting,validatePainting} from './painting.js';
 export function setupPaintingForm(form) {
- let seq=0,checkTimer;
+ let seq=0,checkTimer,presetTouched=false;
  const select=form.querySelector('#preset'),hint=form.querySelector('#hint'),status=form.querySelector('#description-status');
  const demo=form.querySelector('[data-action="demo-v2"]');
  form.presetData=null;
@@ -21,15 +21,20 @@ export function setupPaintingForm(form) {
  };
  rpc('painting_presets',{}).then(({data})=>{
   if(!form.isConnected)return;
-  for(const p of data){const option=document.createElement('option');option.value=p.id;option.textContent=p.description;select.append(option);}
+  for(const p of data??[]){const option=document.createElement('option');option.value=p.id;option.textContent=p.description;select.append(option);}
   const saved=form.dataset.selectedPreset;
-  if(saved && [...select.options].some(o=>o.value===saved)){select.value=saved;select.dispatchEvent(new Event('change'));}
+  if(!presetTouched){
+   const available=[...select.options];
+   const choice=saved!==undefined && available.some(o=>o.value===saved)?saved:available[1]?.value;
+   if(choice){select.value=choice;select.dispatchEvent(new Event('change'));}
+  }
  }).catch(()=>{
   if(!form.isConnected)return;
   // A failed list request must not show an error for an unselected painting.
   const option=document.createElement('option');option.disabled=true;option.textContent=t('presetsUnavailable');select.append(option);
  });
  select.addEventListener('change',async()=>{
+  presetTouched=true;
   const request=++seq;clearTimeout(checkTimer);form.presetData=null;status.textContent='';
   const id=select.value;
   if(!id)hint.value='';
@@ -62,7 +67,7 @@ export function setupPaintingForm(form) {
 export async function paintingDraft(form) {
  if(form.querySelector('#preset').value){
   if(!form.presetData)throw Error(t('presetLoading'));
-  return {items:form.presetData.items,hint:form.presetData.description,image:await preloadPainting(form.presetData.image_path),presetId:form.presetData.id};
+  return {items:validateItems(form.presetData.items),hint:form.presetData.description,image:await preloadPainting(form.presetData.image_path),presetId:form.presetData.id};
  }
  const file=form.querySelector('#painting').files[0],json=form.querySelector('#items-json').files[0];
  const manual=form.dataset.entryMode==='manual';

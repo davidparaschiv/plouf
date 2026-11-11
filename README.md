@@ -59,7 +59,7 @@ Manual entry is selected by default. Fill in each question and its four answers,
 ]
 ```
 
-An example download is included in the host form. There is no application question-count minimum or maximum. An empty array is valid and Play moves straight to the final screen. Practical limits still include browser memory, HTTP request size, database integer capacity and the selected Supabase plan.
+An example download is included in the host form. A new quiz requires at least one complete question. There is no artificial upper question-count limit. Practical limits still include browser memory, HTTP request size, database integer capacity and the selected Supabase plan.
 
 ## Room rules
 
@@ -139,3 +139,5 @@ Apply `202611110002_painting_presets.sql` after the base V2 migration before pub
 The V2 demo uses the current manual answers and PNG, imported files, or selected preset, without requiring a password or creating a room. Every opening starts from zero; guesses use the same normalization and +500/−100 duplicate rules. It starts with a three-second countdown and has no answering deadline. It uses the entire uploaded or preset answer list, not a single sample item. Finding all items (or selecting Finish demo) shows a local single-player podium, then Back returns to the unchanged form. Forest music plays during the demo, podium music at completion, and the previous lobby music resumes when closed; the user's mute setting never changes. The live V2 3–2–1 countdown and demo both explain in EN/FR that red-X-marked objects are excluded background scenery.
 
 Apply `202611110003_exact_accent_guesses.sql` before deploying the matching frontend. It updates V2 guessing only: ASCII inputs can omit accents; Unicode inputs require the stored spelling. Correct alternate spellings still score only once, and a wrong accent does not prevent a later valid answer from scoring. No remote migration was run.
+
+Apply `202611110004_required_room_content.sql` for server-side creation checks: new quiz rooms require at least one complete question, painting rooms require at least one correct item, and passwords cannot be blank. Existing rooms are retained.

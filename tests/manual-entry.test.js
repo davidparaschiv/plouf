@@ -44,7 +44,7 @@ test('manual quiz wizard validates, finalizes all questions, and keeps independe
 test('V2 manual answers start empty, support adding/removing Unicode entries, and ignore inactive inputs',()=>{
  const f=form('items'),state={};setupItemEntry(f,state,esc);
  assert.equal(f.dataset.entryMode,'manual');assert.equal(f.querySelectorAll('#manual-items input').length,0);
- assert.deepEqual(f.readManualItems(),{items:[]});
+ assert.throws(()=>f.readManualItems(),/at least one/);
  for(let i=0;i<3;i++)f.querySelector('[data-add]').click();
  f.querySelectorAll('#manual-items input').forEach((el,i)=>input(el,['  UN   CŒUR  ','une boîte',''][i]));
  assert.deepEqual(f.readManualItems(),{items:['un cœur','une boîte']});

@@ -797,6 +797,10 @@ app.addEventListener("submit", async (e) => {
   errorEl.hidden = true;
   try {
     const fields = new FormData(e.target);
+    if(['host-form','host-v2-form'].includes(e.target.id)){
+      const password=String(fields.get('password')||'');
+      if(password.length<4 || !password.trim())throw Error('Use at least four password characters.');
+    }
     if (e.target.id === 'host-v2-form') {
       const draft = await paintingDraft(e.target);
       if(draft.presetId) {
@@ -810,7 +814,7 @@ app.addEventListener("submit", async (e) => {
       const { data } = await call("create_room", {
         p_theme: selectedTheme,
         p_password: fields.get("password"),
-        p_questions: questions,
+        p_questions: validateQuestions(questions),
       });
       roomId = data;
     } else if (e.target.id === "guest-form") {

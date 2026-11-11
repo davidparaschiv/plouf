@@ -72,7 +72,7 @@ test('V1 and V2 database lifecycle, authorization, Unicode, scoring and finish',
  assert.equal(await rpc('painting_description_available',['Fresh painting']),true);
  await assert.rejects(rpc('create_painting_room',['pass','one two three four five',host+'/painting.png','[]',30]),/four words/);
  await db.query("insert into storage.objects(bucket_id,name) values('paintings',$1)",[host+'/duplicate.png']);
- await assert.rejects(rpc('create_painting_room',['pass','  OBJECTS ',host+'/duplicate.png','[]',30]),/already used/);
+ await assert.rejects(rpc('create_painting_room',['pass','  OBJECTS ',host+'/duplicate.png','["x"]',30]),/already used/);
  await as(b);
  const preview=await rpc('painting_preset',[preset.id]);assert.equal(preview.items.length,3);
  assert.equal(await rpc('can_read_painting',[preview.image_path]),true);

@@ -26,6 +26,10 @@ test('V2 database and demo agree on exact Unicode, ASCII fallback, duplicates an
  const demo=new PaintingDemo(items);
  await as(host);
  await db.query("insert into storage.objects(bucket_id,name) values('paintings',$1)",[host+'/accent.png']);
+ await assert.rejects(rpc('create_room',['forest','pass','[]']),/at least one complete question/);
+ await assert.rejects(rpc('create_room',['forest','    ',JSON.stringify([{Q:'Q',C:'C',W1:'A',W2:'B',W3:'D'}])]),/password/);
+ await assert.rejects(rpc('create_room',['forest','pass',JSON.stringify([{Q:'\t',C:'C',W1:'A',W2:'B',W3:'D'}])]),/complete question/);
+ await assert.rejects(rpc('create_painting_room',['pass','Empty painting',host+'/accent.png','[]',120]),/at least one correct answer/);
  const room=await rpc('create_painting_room',['pass','Accent practice',host+'/accent.png',JSON.stringify(items),120]);
  await rpc('start_room',[room]);await as(guest);await rpc('join_room',[room,'Player',23]);await as(host);await rpc('play_room',[room]);
  await db.exec('reset role');await db.query("update private.rooms set deadline=clock_timestamp()-interval '0.1 seconds' where id=$1",[room]);
