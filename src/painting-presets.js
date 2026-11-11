@@ -14,6 +14,8 @@ export function setupPaintingForm(form) {
   const chosen=!!select.value;
   form.querySelector('#painting-description-field').hidden=chosen;
   form.querySelector('#painting-duration-field').hidden=chosen;
+  form.querySelector('#painting-language-field').hidden=chosen;
+  form.querySelector('#quiz-language').disabled=chosen;
   form.querySelector('#painting-imports').hidden=chosen;
   form.querySelector('#painting').disabled=chosen;form.querySelector('#painting').required=!chosen;
   if(chosen)form.querySelectorAll('#manual-items input,#items-import input').forEach(el=>el.disabled=true);else form.syncEntryMode?.();
@@ -22,7 +24,7 @@ export function setupPaintingForm(form) {
  };
  rpc('painting_presets',{}).then(({data})=>{
   if(!form.isConnected)return;
-  for(const p of data??[]){const option=document.createElement('option');option.value=p.id;option.textContent=p.description;select.append(option);}
+  for(const p of data??[]){const option=document.createElement('option');option.value=p.id;option.textContent=`${p.description} (${p.quiz_language==='fr'?'French':'English'})`;option.dataset.description=p.description;select.append(option);}
   const saved=form.dataset.selectedPreset;
   if(!presetTouched){
    const available=[...select.options];
@@ -37,7 +39,7 @@ export function setupPaintingForm(form) {
   if(!id)hint.value='';
   form.syncPaintingPreset();
   if(!id)return;
-  hint.value=select.selectedOptions[0].textContent;
+  hint.value=select.selectedOptions[0].dataset.description;
   status.textContent=t('presetLoading');
   try {
    const {data}=await rpc('painting_preset',{p_id:id});

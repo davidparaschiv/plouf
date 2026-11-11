@@ -180,7 +180,9 @@
     "createRoomError": "We couldn’t create your room. Please try again.",
     "importFileError": "We couldn’t read that file. Please check it and try again.",
     "questionsRequired": "Add at least one complete question.",
-    "itemsRequired": "Add at least one correct answer."
+    "itemsRequired": "Add at least one correct answer.",
+    "quizLanguage": "Quiz Language",
+    "quizLanguageInvalid": "Choose English or French."
   },
   "frr": {
     "header": "un peu de compétition entre amis",
@@ -363,6 +365,8 @@
     "createRoomError": "Impossible de créer votre salle. Veuillez réessayer.",
     "importFileError": "Impossible de lire ce fichier. Vérifiez-le et réessayez.",
     "questionsRequired": "Ajoutez au moins une question complète.",
-    "itemsRequired": "Ajoutez au moins une bonne réponse."
+    "itemsRequired": "Ajoutez au moins une bonne réponse.",
+    "quizLanguage": "Langue du quiz",
+    "quizLanguageInvalid": "Choisissez l’anglais ou le français."
   }
 }

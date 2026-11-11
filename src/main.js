@@ -115,7 +115,18 @@ const roomDigits = value => String(value ?? '').replace(/\D/g, '');
 const guestRoomCode = value => roomDigits(value) ? `PID-${roomDigits(value)}` : '';
 function guestForm() {
   currentView = "guest";
-  app.innerHTML = `<section class="panel">${back()}<h2>${t("entrance")}</h2><p class="muted">${t("entranceNote")}</p><form id="guest-form" class="stack"><div><label for="room">${t("roomId")}</label><div class="room-lookup"><div class="room-number-input"><span id="room-prefix">PID-</span><input id="room" name="room" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" required value="${roomDigits(roomId)}" placeholder="10020" aria-describedby="room-prefix" autocomplete="off" spellcheck="false"></div><button type="button" class="secondary" data-action="find-room">${t("checkRoom")}</button></div></div><div><label for="name">${t("yourName")}</label><input id="name" name="name" type="text" required maxlength="32" placeholder="${t("namePlaceholder")}" autocomplete="nickname"></div><div id="character-picker">${characterPicker()}</div><p class="error" id="form-error" hidden></p><button class="primary wide" type="submit" ${guestRoom?.can_join ? "" : "disabled"}>${t("join")}</button></form></section>`;
+  app.innerHTML = `<section class="panel">${back()}<h2>${t("entrance")}</h2><p class="muted">${t("entranceNote")}</p><form id="guest-form" class="stack"><div><label for="room">${t("roomId")}</label><div class="room-lookup"><div class="room-number-input"><span id="room-prefix">PID-</span><input id="room" name="room" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" required value="${roomDigits(roomId)}" placeholder="10020" aria-describedby="room-prefix" autocomplete="off" spellcheck="false"></div><button type="button" class="secondary" data-action="find-room">${t("checkRoom")}</button></div></div><div><label for="name">${t("yourName")}</label><input id="name" name="name" type="text" required maxlength="32" placeholder="${t("namePlaceholder")}" autocomplete="nickname"></div><div id="character-picker">${characterPicker()}</div><p class="error" id="form-error" hidden></p><button class="primary wide" type="submit" >${t("join")}</button></form></section>`;
+}
+async function refreshGuestRoom(room) {
+  const {data}=await call('room_info',{p_room:room});
+  if(currentView!=='guest' || guestRoomCode(app.querySelector('#room').value)!==room)return null;
+  const changed=guestRoom?.id!==room || guestRoom?.theme!==data.theme;
+  guestRoom={id:room,...data};roomId=room;
+  if(changed){
+    selected=themeCharacters(data.theme)[0].id;
+    app.querySelector('#character-picker').innerHTML=characterPicker();
+  }
+  return data;
 }
 async function findGuestRoom() {
   if (busy) return;
@@ -125,17 +136,8 @@ async function findGuestRoom() {
   button.disabled = true;
   busy = true;
   try {
-    const { data } = await call("room_info", { p_room: room });
-    if (
-      currentView !== "guest" ||
-      guestRoomCode(app.querySelector("#room").value) !== room
-    )
-      return;
-    guestRoom = { id: room, ...data };
-    roomId = room;
-    selected = themeCharacters(data.theme)[0].id;
-    app.querySelector("#character-picker").innerHTML = characterPicker();
-    app.querySelector("[type=submit]").disabled = !data.can_join;
+    const data=await refreshGuestRoom(room);
+    if(!data)return;
     const error = app.querySelector("#form-error");
     error.hidden = data.can_join;
     error.textContent = data.can_join ? "" : t("notOpen");
@@ -761,7 +763,6 @@ app.addEventListener("input", (event) => {
   if (guestRoom && guestRoomCode(digits) !== guestRoom.id) {
     guestRoom = null;
     app.querySelector("#character-picker").innerHTML = characterPicker();
-    app.querySelector("[type=submit]").disabled = true;
   }
 });
 
@@ -812,7 +813,7 @@ app.addEventListener("submit", async (e) => {
         roomId=(await call('create_room_from_preset',{p_preset:draft.presetId,p_password:fields.get('password')})).data;
       } else {
         const hint=validateDescription(fields.get('hint'));
-        roomId = await createPaintingRoom({...draft,password:fields.get('password'),hint,duration:Number(fields.get('duration'))});
+        roomId = await createPaintingRoom({...draft,password:fields.get('password'),hint,duration:Number(fields.get('duration')),quizLanguage:fields.get('quiz-language')});
       }
     } else if (e.target.id === "host-form") {
       if (!questions) throw Error(e.target.dataset.entryMode === 'manual' ? t('createQuizFirst') : 'Upload your questions first.');
@@ -824,7 +825,9 @@ app.addEventListener("submit", async (e) => {
       roomId = data;
     } else if (e.target.id === "guest-form") {
       roomId = guestRoomCode(fields.get("room"));
-      if (!guestRoom || guestRoom.id !== roomId) throw Error(t("roomFirst"));
+      const data=await refreshGuestRoom(roomId);
+      if(!data)return;
+      if(!data.can_join)throw Error(t('notOpen'));
       await call("join_room", {
         p_room: roomId,
         p_name: String(fields.get("name")),

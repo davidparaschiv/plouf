@@ -22,6 +22,7 @@ test('V2 database and demo agree on exact Unicode, ASCII fallback, duplicates an
   await db.exec(await readFile('supabase/migrations/'+file,'utf8'));
  }
  assert.equal((await db.query("select duration_seconds from private.painting_presets where description='Legacy preset'")).rows[0].duration_seconds,120);
+ assert.equal((await db.query("select quiz_language from private.painting_presets where description='Legacy preset'")).rows[0].quiz_language,'en');
 
  const host='00000000-0000-0000-0000-000000000001',guest='00000000-0000-0000-0000-000000000002';
  const as=async id=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec('set role authenticated');};
@@ -46,6 +47,17 @@ test('V2 database and demo agree on exact Unicode, ASCII fallback, duplicates an
    assert.equal((await rpc('room_snapshot',[reused])).duration_seconds,duration);
   }
  }
+ const frPath=host+'/french.png';
+ await db.query("insert into storage.objects(bucket_id,name) values('paintings',$1)",[frPath]);
+ await assert.rejects(rpc('create_painting_room',['pass','French classroom',frPath,'["cœur"]',60,'de']),/English or French/);
+ await rpc('create_painting_room',['pass','French classroom',frPath,'["cœur"]',60,'fr']);
+ const frenchPreset=(await rpc('painting_presets',[])).find(p=>p.description==='French classroom');
+ assert.equal(frenchPreset.quiz_language,'fr');
+ const frenchData=await rpc('painting_preset',[frenchPreset.id]);
+ assert.equal(frenchData.quiz_language,'fr');assert.deepEqual(frenchData.items,['cœur']);
+ const frenchRoom=await rpc('create_room_from_preset',[frenchPreset.id,'pass']);
+ const frenchSnapshot=await rpc('room_snapshot',[frenchRoom]);
+ assert.equal(frenchSnapshot.hint,'French classroom');assert.equal(frenchSnapshot.duration_seconds,60);
  const room=await rpc('create_painting_room',['pass','Accent practice',host+'/accent.png',JSON.stringify(items),120]);
  await rpc('start_room',[room]);await as(guest);await rpc('join_room',[room,'Player',23]);await as(host);await rpc('play_room',[room]);
  await db.exec('reset role');await db.query("update private.rooms set deadline=clock_timestamp()-interval '0.1 seconds' where id=$1",[room]);
@@ -55,5 +67,25 @@ test('V2 database and demo agree on exact Unicode, ASCII fallback, duplicates an
   assert.deepEqual(actual,expected,guess);
  }
  const result=await rpc('room_snapshot',[room]);assert.equal(result.phase,'finished');assert.equal(result.members[0].points,demo.score);assert.equal(demo.score,2500);
+ // Finish as soon as every guest has found every item, without waiting for the timer.
+ await as(host);
+ const quickPreset=(await rpc('painting_presets',[])).find(p=>p.description==='Duration 30');
+ const multiplayer=await rpc('create_room_from_preset',[quickPreset.id,'pass']);
+ await rpc('start_room',[multiplayer]);
+ await as(guest);await rpc('join_room',[multiplayer,'First',23]);
+ const secondGuest='00000000-0000-0000-0000-000000000003';
+ await as(secondGuest);await rpc('join_room',[multiplayer,'Second',24]);
+ await as(host);await rpc('play_room',[multiplayer]);
+ await db.exec('reset role');await db.query("update private.rooms set deadline=clock_timestamp()-interval '0.1 seconds' where id=$1",[multiplayer]);
+ await as(guest);const active=await rpc('room_snapshot',[multiplayer]);
+ await rpc('submit_item',[multiplayer,active.session_id,'item']);
+ const waiting=await rpc('room_snapshot',[multiplayer]);
+ assert.equal(waiting.phase,'painting');assert.equal(waiting.playing,true);
+ await as(secondGuest);await rpc('submit_item',[multiplayer,active.session_id,'wrong']);
+ assert.equal((await rpc('room_snapshot',[multiplayer])).phase,'painting');
+ await rpc('submit_item',[multiplayer,active.session_id,'item']);
+ const finished=await rpc('room_snapshot',[multiplayer]);
+ assert.equal(finished.phase,'finished');assert.equal(finished.playing,false);assert.equal(finished.started,false);
+ assert.equal(finished.members.length,2);assert.equal(finished.members[0].points,500);assert.equal(finished.members[1].points,400);
  }finally{await db.close();}
 });
