@@ -111,13 +111,15 @@ function characterPicker() {
   if (!group.length) return `<p class="muted">${t("roomFirst")}</p>`;
   return `<div><span class="field-label">${t("chooseCharacter")} · ${t(guestRoom.theme)}</span><div class="characters">${group.map((c) => `<button type="button" class="character ${c.id === selected ? "selected" : ""}" data-character="${c.id}" aria-pressed="${c.id === selected}">${avatar(c.id)}<span>${esc(c.name[locale()])}</span></button>`).join("")}</div></div>`;
 }
+const roomDigits = value => String(value ?? '').replace(/\D/g, '');
+const guestRoomCode = value => roomDigits(value) ? `PID-${roomDigits(value)}` : '';
 function guestForm() {
   currentView = "guest";
-  app.innerHTML = `<section class="panel">${back()}<h2>${t("entrance")}</h2><p class="muted">${t("entranceNote")}</p><form id="guest-form" class="stack"><div><label for="room">${t("roomId")}</label><div class="room-lookup"><input id="room" name="room" type="text" required value="${esc(roomId)}" placeholder="PID-10020" autocapitalize="characters" autocomplete="off"><button type="button" class="secondary" data-action="find-room">${t("checkRoom")}</button></div></div><div><label for="name">${t("yourName")}</label><input id="name" name="name" type="text" required maxlength="32" placeholder="${t("namePlaceholder")}" autocomplete="nickname"></div><div id="character-picker">${characterPicker()}</div><p class="error" id="form-error" hidden></p><button class="primary wide" type="submit" ${guestRoom?.can_join ? "" : "disabled"}>${t("join")}</button></form></section>`;
+  app.innerHTML = `<section class="panel">${back()}<h2>${t("entrance")}</h2><p class="muted">${t("entranceNote")}</p><form id="guest-form" class="stack"><div><label for="room">${t("roomId")}</label><div class="room-lookup"><div class="room-number-input"><span id="room-prefix">PID-</span><input id="room" name="room" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" required value="${roomDigits(roomId)}" placeholder="10020" aria-describedby="room-prefix" autocomplete="off" spellcheck="false"></div><button type="button" class="secondary" data-action="find-room">${t("checkRoom")}</button></div></div><div><label for="name">${t("yourName")}</label><input id="name" name="name" type="text" required maxlength="32" placeholder="${t("namePlaceholder")}" autocomplete="nickname"></div><div id="character-picker">${characterPicker()}</div><p class="error" id="form-error" hidden></p><button class="primary wide" type="submit" ${guestRoom?.can_join ? "" : "disabled"}>${t("join")}</button></form></section>`;
 }
 async function findGuestRoom() {
   if (busy) return;
-  const room = app.querySelector("#room").value.trim().toUpperCase();
+  const room = guestRoomCode(app.querySelector("#room").value);
   if (!room) return;
   const button = app.querySelector('[data-action="find-room"]');
   button.disabled = true;
@@ -126,7 +128,7 @@ async function findGuestRoom() {
     const { data } = await call("room_info", { p_room: room });
     if (
       currentView !== "guest" ||
-      app.querySelector("#room").value.trim().toUpperCase() !== room
+      guestRoomCode(app.querySelector("#room").value) !== room
     )
       return;
     guestRoom = { id: room, ...data };
@@ -749,17 +751,20 @@ app.addEventListener("click", async (e) => {
   }
 });
 app.addEventListener("input", (event) => {
-  if (
-    currentView === "guest" &&
-    event.target.id === "room" &&
-    guestRoom &&
-    event.target.value.trim().toUpperCase() !== guestRoom.id
-  ) {
+  if (currentView !== "guest" || event.target.id !== "room") return;
+  const input=event.target, digits=roomDigits(input.value);
+  if(input.value!==digits){
+    const caret=roomDigits(input.value.slice(0,input.selectionStart??input.value.length)).length;
+    input.value=digits;input.setSelectionRange(caret,caret);
+  }
+  app.querySelector('#form-error').hidden=true;
+  if (guestRoom && guestRoomCode(digits) !== guestRoom.id) {
     guestRoom = null;
     app.querySelector("#character-picker").innerHTML = characterPicker();
     app.querySelector("[type=submit]").disabled = true;
   }
 });
+
 app.addEventListener("change", async (e) => {
   if (e.target.id === 'painting' || e.target.id === 'items-json') {
     const label = app.querySelector(e.target.id === 'painting' ? '#painting-label' : '#items-label');
@@ -818,7 +823,7 @@ app.addEventListener("submit", async (e) => {
       });
       roomId = data;
     } else if (e.target.id === "guest-form") {
-      roomId = String(fields.get("room")).trim().toUpperCase();
+      roomId = guestRoomCode(fields.get("room"));
       if (!guestRoom || guestRoom.id !== roomId) throw Error(t("roomFirst"));
       await call("join_room", {
         p_room: roomId,
