@@ -118,9 +118,12 @@ function characterPicker() {
 }
 const roomDigits = value => String(value ?? '').replace(/\D/g, '');
 const guestRoomCode = value => roomDigits(value) ? `PID-${roomDigits(value)}` : '';
+function roomNumberInput() {
+  return `<div class="room-number-input"><span id="room-prefix">PID-</span><input id="room" name="room" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" required value="${roomDigits(roomId)}" placeholder="10020" aria-describedby="room-prefix" autocomplete="off" spellcheck="false"></div>`;
+}
 function guestForm() {
   currentView = "guest";
-  app.innerHTML = `<section class="panel guest-join-panel">${back()}<h2>${t("entrance")}</h2><p class="muted">${t("entranceNote")}</p><form id="guest-form" class="stack"><div><label for="room">${t("roomId")}</label><div class="room-lookup"><div class="room-number-input"><span id="room-prefix">PID-</span><input id="room" name="room" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" required value="${roomDigits(roomId)}" placeholder="10020" aria-describedby="room-prefix" autocomplete="off" spellcheck="false"></div><button type="button" class="secondary" data-action="find-room">${t("checkRoom")}</button></div></div><div><label for="name">${t("yourName")}</label><input id="name" name="name" type="text" required maxlength="32" placeholder="${t("namePlaceholder")}" autocomplete="nickname"></div><div id="character-picker">${characterPicker()}</div><p class="error" id="form-error" hidden></p><button class="primary wide" type="submit" >${t("join")}</button></form></section>`;
+  app.innerHTML = `<section class="panel guest-join-panel">${back()}<h2>${t("entrance")}</h2><p class="muted">${t("entranceNote")}</p><form id="guest-form" class="stack"><div><label for="room">${t("roomId")}</label><div class="room-lookup">${roomNumberInput()}<button type="button" class="secondary" data-action="find-room">${t("checkRoom")}</button></div></div><div><label for="name">${t("yourName")}</label><input id="name" name="name" type="text" required maxlength="32" placeholder="${t("namePlaceholder")}" autocomplete="nickname"></div><div id="character-picker">${characterPicker()}</div><p class="error" id="form-error" hidden></p><button class="primary wide" type="submit" >${t("join")}</button></form></section>`;
 }
 async function refreshGuestRoom(room) {
   const {data}=await call('room_info',{p_room:room});
@@ -236,7 +239,7 @@ function openUploadGuide(action) {
 }
 function unlockForm() {
   currentView = "unlock";
-  app.innerHTML = `<section class="panel">${back()}<h2>${t("welcomeHost")}</h2><form id="unlock-form" class="stack"><div><label for="room">${t("roomId")}</label><input type="text" id="room" name="room" value="${esc(roomId)}" placeholder="PID-10020" required></div><div><label for="password">${t("password")}</label><input type="password" id="password" name="password" required minlength="4" autocomplete="current-password"></div><p class="error" id="form-error" hidden></p><button type="submit" class="primary">${t("enter")}</button></form></section>`;
+  app.innerHTML = `<section class="panel">${back()}<h2>${t("welcomeHost")}</h2><form id="unlock-form" class="stack"><div><label for="room">${t("roomId")}</label>${roomNumberInput()}</div><div><label for="password">${t("password")}</label><input type="password" id="password" name="password" required minlength="4" autocomplete="current-password"></div><p class="error" id="form-error" hidden></p><button type="submit" class="primary">${t("enter")}</button></form></section>`;
 }
 function updateLanguageControls() {
   document.title=t("pageTitle");
@@ -772,14 +775,14 @@ app.addEventListener("click", async (e) => {
   }
 });
 app.addEventListener("input", (event) => {
-  if (currentView !== "guest" || event.target.id !== "room") return;
+  if (!["guest","unlock"].includes(currentView) || event.target.id !== "room") return;
   const input=event.target, digits=roomDigits(input.value);
   if(input.value!==digits){
     const caret=roomDigits(input.value.slice(0,input.selectionStart??input.value.length)).length;
     input.value=digits;input.setSelectionRange(caret,caret);
   }
   app.querySelector('#form-error').hidden=true;
-  if (guestRoom && guestRoomCode(digits) !== guestRoom.id) {
+  if (currentView === "guest" && guestRoom && guestRoomCode(digits) !== guestRoom.id) {
     guestRoom = null;
     app.querySelector("#character-picker").innerHTML = characterPicker();
   }
@@ -853,7 +856,7 @@ app.addEventListener("submit", async (e) => {
         p_character: selected,
       });
     } else {
-      roomId = String(fields.get("room")).trim().toUpperCase();
+      roomId = guestRoomCode(fields.get("room"));
       await call("unlock_host", {
         p_room: roomId,
         p_password: fields.get("password"),
