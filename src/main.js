@@ -809,7 +809,7 @@ app.addEventListener("submit", async (e) => {
     if (e.target.id === 'host-v2-form') {
       const draft = await paintingDraft(e.target);
       if(draft.presetId) {
-        roomId=(await call('create_room_from_preset',{p_preset:draft.presetId,p_password:fields.get('password'),p_duration:Number(fields.get('duration'))})).data;
+        roomId=(await call('create_room_from_preset',{p_preset:draft.presetId,p_password:fields.get('password')})).data;
       } else {
         const hint=validateDescription(fields.get('hint'));
         roomId = await createPaintingRoom({...draft,password:fields.get('password'),hint,duration:Number(fields.get('duration'))});

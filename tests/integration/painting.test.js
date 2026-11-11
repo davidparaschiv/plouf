@@ -77,7 +77,7 @@ test('V1 and V2 database lifecycle, authorization, Unicode, scoring and finish',
  const preview=await rpc('painting_preset',[preset.id]);assert.equal(preview.items.length,3);
  assert.equal(await rpc('can_read_painting',[preview.image_path]),true);
  const reused=await rpc('create_room_from_preset',[preset.id,'password',60]);
- const reusedSnapshot=await rpc('room_snapshot',[reused]);assert.equal(reusedSnapshot.host,true);assert.equal(reusedSnapshot.hint,'Objects');assert.equal(reusedSnapshot.duration_seconds,60);
+ const reusedSnapshot=await rpc('room_snapshot',[reused]);assert.equal(reusedSnapshot.host,true);assert.equal(reusedSnapshot.hint,'Objects');assert.equal(reusedSnapshot.duration_seconds,120);
  await assert.rejects(rpc('create_painting_room_base',['pass','Other',host+'/painting.png','[]',30]),/permission denied/);
  await as(host);
  // V1 still uses the original quiz flow and timing.

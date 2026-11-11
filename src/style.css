@@ -1286,3 +1286,5 @@ body.podium main { min-height: 0; padding-block: 0; }
 .room-number-input:focus-within { border-color:#70b69b; box-shadow:0 0 0 3px #a8efd440; }
 .room-number-input span { color:#5c6d62; font-size:16px; font-weight:700; user-select:none; white-space:nowrap; }
 .room-number-input input[type="text"] { width:100%; border:0; background:transparent; padding-left:6px; font-size:16px; font-variant-numeric:tabular-nums; box-shadow:none; }
+
+.painting-score-badge { display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; min-width:84px; min-height:44px; padding:9px 16px; background:var(--mint); color:var(--pink); border:1px solid #ffffffc9; border-radius:14px; box-shadow:0 4px 16px #15382a20; font-size:20px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.2; }

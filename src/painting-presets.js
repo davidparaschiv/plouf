@@ -12,7 +12,8 @@ export function setupPaintingForm(form) {
  form.refreshPaintingDemo=refresh;
  form.syncPaintingPreset=()=>{
   const chosen=!!select.value;
-  const name=form.querySelector('#preset-name');name.hidden=!chosen;name.textContent=chosen ? hint.value : '';
+  form.querySelector('#painting-description-field').hidden=chosen;
+  form.querySelector('#painting-duration-field').hidden=chosen;
   form.querySelector('#painting-imports').hidden=chosen;
   form.querySelector('#painting').disabled=chosen;form.querySelector('#painting').required=!chosen;
   if(chosen)form.querySelectorAll('#manual-items input,#items-import input').forEach(el=>el.disabled=true);else form.syncEntryMode?.();
@@ -36,7 +37,7 @@ export function setupPaintingForm(form) {
   if(!id)hint.value='';
   form.syncPaintingPreset();
   if(!id)return;
-  hint.value=select.selectedOptions[0].textContent;form.querySelector('#preset-name').textContent=hint.value;
+  hint.value=select.selectedOptions[0].textContent;
   status.textContent=t('presetLoading');
   try {
    const {data}=await rpc('painting_preset',{p_id:id});
@@ -89,7 +90,7 @@ export async function openPaintingDemo(form,{esc,music,audioToggle,itemReward,av
   dialog.querySelector('[data-close]').onclick=close;sound();
  };
  const draw=()=>{
-  dialog.innerHTML=`<button type="button" class="back" data-close>${t('back')}</button><section class="painting-game"><div class="painting-stats"><span>${t('demoPlayer')}</span><strong>${game.score} ${t('points')}</strong></div><h2>${esc(draft.hint||t('paintingTitle'))}</h2><p class="demo-background-note">${t('redXNotice')}</p><img class="painting-canvas" src="${esc(image)}" alt="${esc(draft.hint)}"><form class="guess-form"><input type="text" required autocomplete="off" aria-label="${t('guessItem')}" placeholder="${t('guessItem')}"><button type="submit" class="primary">↵</button></form><p>${t('itemsFound',{count:found.size,total:draft.items.length})}</p><div class="found-items">${draft.items.filter(v=>found.has(itemKey(v))).map(v=>`<span>✓ ${esc(v)}</span>`).join('')}</div><button class="back" type="button" data-finish>${t('demoFinish')}</button></section>`;
+  dialog.innerHTML=`<button type="button" class="back" data-close>${t('back')}</button><section class="painting-game"><div class="painting-stats"><span>${t('demoPlayer')}</span><strong class="painting-score-badge">${game.score} ${t('points')}</strong></div><h2>${esc(draft.hint||t('paintingTitle'))}</h2><p class="demo-background-note">${t('redXNotice')}</p><img class="painting-canvas" src="${esc(image)}" alt="${esc(draft.hint)}"><form class="guess-form"><input type="text" required autocomplete="off" aria-label="${t('guessItem')}" placeholder="${t('guessItem')}"><button type="submit" class="primary">↵</button></form><p>${t('itemsFound',{count:found.size,total:draft.items.length})}</p><div class="found-items">${draft.items.filter(v=>found.has(itemKey(v))).map(v=>`<span>✓ ${esc(v)}</span>`).join('')}</div><button class="back" type="button" data-finish>${t('demoFinish')}</button></section>`;
   dialog.querySelector('[data-close]').onclick=close;dialog.querySelector('[data-finish]').onclick=podium;
   dialog.querySelector('form').onsubmit=e=>{
    e.preventDefault();e.stopPropagation();if(locked)return;

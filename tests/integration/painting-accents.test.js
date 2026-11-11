@@ -17,7 +17,11 @@ test('V2 database and demo agree on exact Unicode, ASCII fallback, duplicates an
  alter table storage.objects enable row level security;
  grant select,insert,delete on storage.objects to authenticated;
  create function storage.foldername(text) returns text[] language sql as $$select (string_to_array($1,'/'))[1:cardinality(string_to_array($1,'/'))-1]$$;`);
- for(const file of (await readdir('supabase/migrations')).filter(f=>f.endsWith('.sql')).sort()) await db.exec(await readFile('supabase/migrations/'+file,'utf8'));
+ for(const file of (await readdir('supabase/migrations')).filter(f=>f.endsWith('.sql')).sort()){
+  if(file==='202611110005_preset_duration.sql')await db.exec(`insert into private.painting_presets(description,image_path,correct_items) values('Legacy preset','legacy.png','["legacy"]')`);
+  await db.exec(await readFile('supabase/migrations/'+file,'utf8'));
+ }
+ assert.equal((await db.query("select duration_seconds from private.painting_presets where description='Legacy preset'")).rows[0].duration_seconds,120);
 
  const host='00000000-0000-0000-0000-000000000001',guest='00000000-0000-0000-0000-000000000002';
  const as=async id=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec('set role authenticated');};
@@ -30,6 +34,18 @@ test('V2 database and demo agree on exact Unicode, ASCII fallback, duplicates an
  await assert.rejects(rpc('create_room',['forest','    ',JSON.stringify([{Q:'Q',C:'C',W1:'A',W2:'B',W3:'D'}])]),/password/);
  await assert.rejects(rpc('create_room',['forest','pass',JSON.stringify([{Q:'\t',C:'C',W1:'A',W2:'B',W3:'D'}])]),/complete question/);
  await assert.rejects(rpc('create_painting_room',['pass','Empty painting',host+'/accent.png','[]',120]),/at least one correct answer/);
+ for(const duration of [30,60,120,300]){
+  const path=host+`/preset-${duration}.png`,description=`Duration ${duration}`;
+  await db.query("insert into storage.objects(bucket_id,name) values('paintings',$1)",[path]);
+  await rpc('create_painting_room',['pass',description,path,'["item"]',duration]);
+  const preset=(await rpc('painting_presets',[])).find(p=>p.description===description);
+  assert.equal((await rpc('painting_preset',[preset.id])).duration_seconds,duration);
+  // Neither omission nor a legacy caller's override can change the preset's duration.
+  for(const args of [[preset.id,'pass'],[preset.id,'pass',30]]){
+   const reused=await rpc('create_room_from_preset',args);
+   assert.equal((await rpc('room_snapshot',[reused])).duration_seconds,duration);
+  }
+ }
  const room=await rpc('create_painting_room',['pass','Accent practice',host+'/accent.png',JSON.stringify(items),120]);
  await rpc('start_room',[room]);await as(guest);await rpc('join_room',[room,'Player',23]);await as(host);await rpc('play_room',[room]);
  await db.exec('reset role');await db.query("update private.rooms set deadline=clock_timestamp()-interval '0.1 seconds' where id=$1",[room]);
