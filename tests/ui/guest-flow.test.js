@@ -23,6 +23,8 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
  const me={id:'alice',name:'Alice',character:23,points:500,rank:1};
  const bob={id:'bob',name:'Bob',character:24,points:500,rank:2};
  w.scrollTo=()=>{};
+ w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
+ w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'));};
  w.matchMedia=()=>({matches:true});
  w.Image=class{decode(){return Promise.resolve()}};
  w.fetch=async url=>({ok:true,json:async()=>String(url).includes('characters.json')?catalog:languages});
@@ -46,7 +48,18 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
  try{
   w.eval(code);
   await waitFor(()=>d.querySelector('[data-action=guest]'));
-  click('[data-action=host]');click('[data-action=rooms-v2]');
+  click('[data-action=host]');
+  click('[data-language=frr]');
+  assert.equal(d.querySelector('h2').textContent,languages.frr.hostTitle);
+  assert.equal(d.querySelector('.quiz-shuffle-note span').textContent,languages.frr.answersShuffleNote);
+  d.querySelector('[data-next]').click();
+  assert.equal(d.querySelector('[data-manual-error]').textContent,'Question 1 : Saisissez la question.');
+  click('[data-entry-mode=json]');click('[data-action=json-guide-v1]');
+  assert.ok(d.querySelector('.upload-guide pre').textContent.includes('Votre question ?'));
+  assert.ok(d.querySelector('.upload-guide pre').textContent.includes('Bonne réponse'));
+  d.querySelector('.upload-guide .back').click();
+  assert.ok(d.querySelector('#quiz-import a').href.endsWith('example-questions-fr.json'));
+  click('[data-language=en]');click('[data-action=rooms-v2]');
   await waitFor(()=>d.querySelector('#host-v2-form').presetData);
   assert.equal(d.querySelector('#preset').options[1].textContent,'Private Preset Name (French)');
   assert.equal(d.querySelector('#preset').options[2].textContent,'Garden Objects (English)');
@@ -67,6 +80,17 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
   assert.equal(d.querySelector('#duration').disabled,false);
   assert.equal(d.querySelector('#quiz-language').value,'en');
   assert.deepEqual([...d.querySelector('#quiz-language').options].map(o=>o.textContent),['English','French']);
+  click('[data-language=frr]');
+  await waitFor(()=>d.querySelector('#preset').options.length===3);
+  assert.deepEqual([...d.querySelector('#quiz-language').options].map(o=>o.textContent),['Anglais','Français']);
+  assert.equal(d.querySelector('#preset').options[1].textContent,'Private Preset Name (Français)');
+  assert.ok(d.querySelector('#items-import a').href.endsWith('example-items-fr.json'));
+  const description=d.querySelector('#hint');description.value='';assert.equal(description.checkValidity(),false);
+  assert.equal(description.validationMessage,languages.frr.completeField);
+  const theme=d.querySelector('#object-theme');theme.value='un deux trois quatre cinq';theme.dispatchEvent(new w.Event('input',{bubbles:true}));
+  assert.equal(theme.validationMessage,languages.frr.objectThemeLimit);
+  assert.equal(d.querySelector('.logo').getAttribute('aria-label'),'Accueil Plouf');
+  click('[data-language=en]');
   click('[data-action=home]');
   click('[data-action=guest]');
   assert.equal(d.querySelector('#guest-form [type=submit]').disabled,false);

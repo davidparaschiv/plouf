@@ -36,9 +36,14 @@ export function translatedRank(number) {
   const mod = number % 100;
   return `${number}${mod >= 11 && mod <= 13 ? "th" : { 1: "st", 2: "nd", 3: "rd" }[number % 10] || "th"}`;
 }
-export function errorText(error, fallbackKey) {
+export function errorText(error, fallbackKey="genericError") {
   const message = error?.message ?? String(error);
   const exact = {
+    "Invalid answer.": "invalidAnswer",
+    "Invalid response time.": "invalidResponseTime",
+    "Questions must be an array.": "jsonArray",
+    "Room is not a painting game.": "notPaintingRoom",
+    "This browser is already a guest. Use another browser to host.": "alreadyGuest",
     "Set the theme of the correct objects in up to four words.": "objectThemeLimit",
     "Choose English or French.": "quizLanguageInvalid",
     "Add at least one complete question.": "questionsRequired",
@@ -84,5 +89,6 @@ export function errorText(error, fallbackKey) {
   if (match) return t("answersDifferent", { number: match[1] });
   if (error instanceof SyntaxError) return t("invalidJson");
   if (fallbackKey && !Object.values(messages[language]).includes(message) && !Object.values(messages.en).includes(message)) return t(fallbackKey);
-  return message;
+  const knownKey=Object.keys(messages.en).find(key=>messages.en[key]===message);
+  return knownKey?t(knownKey):message;
 }

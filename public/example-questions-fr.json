@@ -1,0 +1,23 @@
+[
+  {
+    "Q": "Quelle planète est surnommée la planète rouge ?",
+    "C": "Mars",
+    "W1": "Vénus",
+    "W2": "Jupiter",
+    "W3": "Mercure"
+  },
+  {
+    "Q": "Combien de cœurs possède une pieuvre ?",
+    "C": "Trois",
+    "W1": "Un",
+    "W2": "Deux",
+    "W3": "Huit"
+  },
+  {
+    "Q": "Qu’est-ce qui donne aux plantes leur couleur verte ?",
+    "C": "La chlorophylle",
+    "W1": "Le carotène",
+    "W2": "La mélanine",
+    "W3": "La kératine"
+  }
+]

@@ -33,6 +33,9 @@ test("EN and FR dictionaries have matching keys, preserve accents, and interpola
       errorText(Error("Question 2: Q must be text.")),
       "Question 2 : Saisissez la question.",
     );
+    assert.equal(errorText(Error("This browser is already a guest. Use another browser to host.")),t('alreadyGuest'));
+    assert.equal(errorText(Error('Unexpected server error')),t('genericError'));
+    assert.equal(errorText(Error('Choose English or French.')),t('quizLanguageInvalid'));
     setLanguage("en");
     assert.equal(translatedRank(23), "23rd");
     assert.equal(t("guest"), "Guest");

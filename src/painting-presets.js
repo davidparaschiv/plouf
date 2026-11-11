@@ -27,7 +27,7 @@ export function setupPaintingForm(form) {
  };
  rpc('painting_presets',{}).then(({data})=>{
   if(!form.isConnected)return;
-  for(const p of data??[]){const option=document.createElement('option');option.value=p.id;option.textContent=`${p.description} (${p.quiz_language==='fr'?'French':'English'})`;option.dataset.description=p.description;select.append(option);}
+  for(const p of data??[]){const option=document.createElement('option');option.value=p.id;option.textContent=`${p.description} (${t(p.quiz_language==='fr'?'quizFrench':'quizEnglish')})`;option.dataset.description=p.description;select.append(option);}
   const saved=form.dataset.selectedPreset;
   if(!presetTouched){
    const available=[...select.options];

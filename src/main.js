@@ -1,4 +1,6 @@
 import "./style.css";
+import {installLocalizedValidation} from './form-validation.js';
+installLocalizedValidation(document);
 import {modeSwitch,setupQuizEntry,setupItemEntry} from './manual-entry.js';
 let quizEntryState={},itemEntryState={};
 import {setupPaintingForm,paintingDraft,openPaintingDemo,validateDescription} from './painting-presets.js';
@@ -158,7 +160,7 @@ function hostForm(reset = true) {
   currentView = "host";
   if (reset) { questions = null; hostType = 'v1'; quizEntryState={}; itemEntryState={}; }
   if (hostType === 'v2') { app.innerHTML = paintingHostForm(esc,back()); const form=app.querySelector('#host-v2-form');setupItemEntry(form,itemEntryState,esc);setupPaintingForm(form);return; }
-  app.innerHTML = `<section class="panel">${back()}<h2>${t("hostTitle")}</h2><p class="muted">${t("hostNoteForm")}</p><form id="host-form" class="stack"><div><span class="field-label">${t("chooseWorld")}</span><div class="themes">${themes.map((theme) => `<button type="button" data-theme="${theme.id}" class="theme ${theme.id === selectedTheme ? "selected" : ""}" aria-pressed="${theme.id === selectedTheme}"><img src="${asset(theme.id + ".png")}" alt=""><span>${t(theme.id)}</span></button>`).join("")}</div></div>${modeSwitch()}<div id="manual-quiz" class="manual-quiz stack"></div><div id="quiz-import" class="stack"><label class="upload"><span id="upload-label">${t("upload")}</span><input id="questions" type="file" accept="application/json,.json" required></label><a class="back" href="${import.meta.env.BASE_URL}example-questions.json" download style="margin:0">${t("example")}</a><button type="button" class="back" data-action="json-guide-v1" style="margin:0">${t("jsonGuide")}</button></div><button type="button" class="back" data-action="demo" ${questions?.length ? "" : "disabled"} style="margin:0">${t("demoQuestions")}</button><div><label for="password">${t("password")}</label><input id="password" name="password" type="password" required minlength="4" placeholder="${t("passwordHint")}" autocomplete="new-password"></div><p class="error" id="form-error" hidden></p><button type="button" class="try-v2" data-action="rooms-v2">${t("tryPaintingRooms")}</button><button class="primary wide" type="submit">${t("create")}</button></form><button class="back" data-action="unlock" style="margin:20px 0 0">${t("existing")}</button></section>`;
+  app.innerHTML = `<section class="panel">${back()}<h2>${t("hostTitle")}</h2><p class="muted">${t("hostNoteForm")}</p><form id="host-form" class="stack"><div><span class="field-label">${t("chooseWorld")}</span><div class="themes">${themes.map((theme) => `<button type="button" data-theme="${theme.id}" class="theme ${theme.id === selectedTheme ? "selected" : ""}" aria-pressed="${theme.id === selectedTheme}"><img src="${asset(theme.id + ".png")}" alt=""><span>${t(theme.id)}</span></button>`).join("")}</div></div>${modeSwitch()}<div id="manual-quiz" class="manual-quiz stack"></div><div id="quiz-import" class="stack"><label class="upload"><span id="upload-label">${t("upload")}</span><input id="questions" type="file" accept="application/json,.json" required></label><a class="back" href="${import.meta.env.BASE_URL}example-questions${locale()==='frr'?'-fr':''}.json" download style="margin:0">${t("example")}</a><button type="button" class="back" data-action="json-guide-v1" style="margin:0">${t("jsonGuide")}</button></div><button type="button" class="back" data-action="demo" ${questions?.length ? "" : "disabled"} style="margin:0">${t("demoQuestions")}</button><div><label for="password">${t("password")}</label><input id="password" name="password" type="password" required minlength="4" placeholder="${t("passwordHint")}" autocomplete="new-password"></div><p class="error" id="form-error" hidden></p><button type="button" class="try-v2" data-action="rooms-v2">${t("tryPaintingRooms")}</button><button class="primary wide" type="submit">${t("create")}</button></form><button class="back" data-action="unlock" style="margin:20px 0 0">${t("existing")}</button></section>`;
   setupQuizEntry(app.querySelector('#host-form'),quizEntryState,esc,value=>{questions=value;const demo=app.querySelector('[data-action="demo"]');if(demo)demo.disabled=!questions?.length;});
 }
 
@@ -220,7 +222,7 @@ function openUploadGuide(action) {
   const dialog = document.createElement('dialog');
   dialog.className = 'upload-guide';
   const mode = action === 'painting-guide' ? 'photo' : action.endsWith('v2') ? 'v2' : 'v1';
-  dialog.innerHTML = `<button type="button" class="back">${t('back')}</button><h2>${t(mode === 'photo' ? 'paintingGuide' : 'jsonGuide')}</h2><p>${t('guide'+mode)}</p>${mode === 'photo' ? '' : `<pre>${esc(mode === 'v2' ? '["une fenêtre", "a blue chair", "un cœur"]' : JSON.stringify([{Q:'Your question?',C:'Correct answer',W1:'Wrong answer 1',W2:'Wrong answer 2',W3:'Wrong answer 3'}],null,2))}</pre><p>${t('guideSave')}</p>`}`;
+  dialog.innerHTML = `<button type="button" class="back">${t('back')}</button><h2>${t(mode === 'photo' ? 'paintingGuide' : 'jsonGuide')}</h2><p>${t('guide'+mode)}</p>${mode === 'photo' ? '' : `<pre>${esc(mode === 'v2' ? JSON.stringify([t('exampleItemOne'),t('exampleItemTwo'),t('exampleItemThree')]) : JSON.stringify([{Q:t('exampleQuestion'),C:t('fieldC'),W1:t('fieldW1'),W2:t('fieldW2'),W3:t('fieldW3')}],null,2))}</pre><p>${t('guideSave')}</p>`}`;
   dialog.querySelector('button').onclick = () => dialog.close();
   dialog.addEventListener('close',()=>dialog.remove(),{once:true});
   document.body.append(dialog);
@@ -234,6 +236,9 @@ function unlockForm() {
   app.innerHTML = `<section class="panel">${back()}<h2>${t("welcomeHost")}</h2><form id="unlock-form" class="stack"><div><label for="room">${t("roomId")}</label><input type="text" id="room" name="room" value="${esc(roomId)}" placeholder="PID-10020" required></div><div><label for="password">${t("password")}</label><input type="password" id="password" name="password" required minlength="4" autocomplete="current-password"></div><p class="error" id="form-error" hidden></p><button type="submit" class="primary">${t("enter")}</button></form></section>`;
 }
 function updateLanguageControls() {
+  document.title=t("pageTitle");
+  document.querySelectorAll('[data-language]').forEach(button=>button.setAttribute('aria-label',t(button.dataset.language==='frr'?'quizFrench':'quizEnglish')));
+  document.querySelector(".logo").setAttribute("aria-label",t("homeLabel"));
   document.querySelector("#header-tagline").textContent = t("header");
   document
     .querySelector(".language-toggle")
@@ -872,6 +877,7 @@ addEventListener("resize", () => {
   }
 });
 async function boot() {
+  setLanguage(locale());updateLanguageControls();
   try {
     await Promise.all([
       loadLanguages(`${import.meta.env.BASE_URL}lang.json`),
@@ -882,7 +888,7 @@ async function boot() {
     home();
     music.unlock();
   } catch (error) {
-    app.innerHTML = `<section class="loader"><p class="error">${esc(error.message)}</p><button class="primary" id="retry">${t("retry")}</button></section>`;
+    app.innerHTML = `<section class="loader"><p class="error">${esc(errorText(error,"loadError"))}</p><button class="primary" id="retry">${t("retry")}</button></section>`;
     document.querySelector("#retry").onclick = () => location.reload();
   }
 }
