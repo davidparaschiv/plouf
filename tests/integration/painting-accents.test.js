@@ -23,6 +23,7 @@ test('V2 database and demo agree on exact Unicode, ASCII fallback, duplicates an
  }
  assert.equal((await db.query("select duration_seconds from private.painting_presets where description='Legacy preset'")).rows[0].duration_seconds,120);
  assert.equal((await db.query("select quiz_language from private.painting_presets where description='Legacy preset'")).rows[0].quiz_language,'en');
+ assert.equal((await db.query("select object_theme from private.painting_presets where description='Legacy preset'")).rows[0].object_theme,'Legacy preset');
 
  const host='00000000-0000-0000-0000-000000000001',guest='00000000-0000-0000-0000-000000000002';
  const as=async id=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec('set role authenticated');};
@@ -50,14 +51,21 @@ test('V2 database and demo agree on exact Unicode, ASCII fallback, duplicates an
  const frPath=host+'/french.png';
  await db.query("insert into storage.objects(bucket_id,name) values('paintings',$1)",[frPath]);
  await assert.rejects(rpc('create_painting_room',['pass','French classroom',frPath,'["cœur"]',60,'de']),/English or French/);
- await rpc('create_painting_room',['pass','French classroom',frPath,'["cœur"]',60,'fr']);
+ await rpc('create_painting_room',['pass','French classroom',frPath,'["cœur"]',60,'fr','Classroom Objects']);
  const frenchPreset=(await rpc('painting_presets',[])).find(p=>p.description==='French classroom');
  assert.equal(frenchPreset.quiz_language,'fr');
  const frenchData=await rpc('painting_preset',[frenchPreset.id]);
+ assert.equal(frenchData.object_theme,'Classroom Objects');
  assert.equal(frenchData.quiz_language,'fr');assert.deepEqual(frenchData.items,['cœur']);
  const frenchRoom=await rpc('create_room_from_preset',[frenchPreset.id,'pass']);
  const frenchSnapshot=await rpc('room_snapshot',[frenchRoom]);
- assert.equal(frenchSnapshot.hint,'French classroom');assert.equal(frenchSnapshot.duration_seconds,60);
+ assert.equal(frenchSnapshot.hint,'Classroom Objects');assert.equal(frenchSnapshot.duration_seconds,60);
+ await assert.rejects(rpc('create_painting_room',['pass','Bad theme',frPath,'["item"]',60,'en','']),/theme/);
+ await assert.rejects(rpc('create_painting_room',['pass','Bad theme',frPath,'["item"]',60,'en','one two three four five']),/theme/);
+ await rpc('start_room',[frenchRoom]);await as(guest);await rpc('join_room',[frenchRoom,'French guest',23]);
+ const guestView=await rpc('room_snapshot',[frenchRoom]);
+ assert.equal(guestView.hint,'Classroom Objects');assert.equal(guestView.description,undefined);
+ await as(host);
  const room=await rpc('create_painting_room',['pass','Accent practice',host+'/accent.png',JSON.stringify(items),120]);
  await rpc('start_room',[room]);await as(guest);await rpc('join_room',[room,'Player',23]);await as(host);await rpc('play_room',[room]);
  await db.exec('reset role');await db.query("update private.rooms set deadline=clock_timestamp()-interval '0.1 seconds' where id=$1",[room]);

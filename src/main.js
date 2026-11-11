@@ -450,10 +450,12 @@ function roomHeader() {
 }
 function renderWaiting() {
   const s = snapshot;
+  const showTheme=s.type==='v2' && s.phase==='waiting';
   const url = new URL(location.href);
   url.search = "";
   url.searchParams.set("room", s.id);
-  app.innerHTML = `<section style="max-width:650px;margin:auto">${roomHeader()}<div class="waiting-title"><p class="eyebrow">${s.started ? t("more") : t("ready")}</p><h1>${s.started ? t("company") : t("makeRoom")}</h1></div>${s.host ? `<div class="share"><input type="text" id="share-url" aria-label="${t("roomId")}" readonly value="${esc(url.href)}"><button class="secondary" data-action="copy">${t("copy")}</button></div>` : ""}<div class="arena" id="arena">${s.members.length ? "" : `<span class="empty">${s.started ? t("waitingCompany") : t("startWelcome")}</span>`}</div><p class="room-meta">${t(s.members.length === 1 ? "guestCount" : "guestsCount", { count: s.members.length })}${s.started ? " · " + t("waitingHost") : ""}</p><div class="room-actions">${s.host ? `<button class="primary" data-action="${s.started ? "play" : "start"}">${s.started ? t("play") : t("start")}</button>${s.started ? `<button class="secondary" data-action="start">${t("reset")}</button>` : ""}` : `<span class="muted"><span class="spinner"></span> ${t("comfortable")}</span>`}</div></section>`;
+  app.innerHTML = `<section class="${showTheme ? 'v2-waiting' : ''}" style="max-width:650px;margin:auto">${roomHeader()}<div class="waiting-title"><p class="eyebrow">${s.started ? t("more") : t("ready")}</p><h1>${s.started ? t("company") : t("makeRoom")}</h1></div>${s.host ? `<div class="share"><input type="text" id="share-url" aria-label="${t("roomId")}" readonly value="${esc(url.href)}"><button class="secondary" data-action="copy">${t("copy")}</button></div>` : ""}<div class="arena" id="arena">${s.members.length ? "" : `<span class="empty">${s.started ? t("waitingCompany") : t("startWelcome")}</span>`}</div><p class="room-meta">${t(s.members.length === 1 ? "guestCount" : "guestsCount", { count: s.members.length })}${s.started ? " · " + t("waitingHost") : ""}</p><div class="room-actions">${s.host ? `<button class="primary" data-action="${s.started ? "play" : "start"}">${s.started ? t("play") : t("start")}</button>${s.started ? `<button class="secondary" data-action="start">${t("reset")}</button>` : ""}` : `<span class="muted"><span class="spinner"></span> ${t("comfortable")}</span>`}</div></section>`;
+  if(showTheme)app.insertAdjacentHTML('beforeend',`<aside class="waiting-theme-banner">${t('waitingThemeNotice',{theme:`<strong>${esc(s.hint)}</strong>`})}</aside>`);
   placeMembers();
 }
 function placeMembers() {
@@ -813,7 +815,7 @@ app.addEventListener("submit", async (e) => {
         roomId=(await call('create_room_from_preset',{p_preset:draft.presetId,p_password:fields.get('password')})).data;
       } else {
         const hint=validateDescription(fields.get('hint'));
-        roomId = await createPaintingRoom({...draft,password:fields.get('password'),hint,duration:Number(fields.get('duration')),quizLanguage:fields.get('quiz-language')});
+        roomId = await createPaintingRoom({...draft,password:fields.get('password'),hint,duration:Number(fields.get('duration')),quizLanguage:fields.get('quiz-language'),objectTheme:draft.hint});
       }
     } else if (e.target.id === "host-form") {
       if (!questions) throw Error(e.target.dataset.entryMode === 'manual' ? t('createQuizFirst') : 'Upload your questions first.');

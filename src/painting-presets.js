@@ -1,19 +1,22 @@
 import {rpc} from './api.js';
 import {t} from './i18n.js';
-import {validateItems,itemKey,PaintingDemo,validateDescription} from './painting-rules.js';
+import {validateItems,itemKey,PaintingDemo,validateDescription,validateObjectTheme} from './painting-rules.js';
 export {validateDescription} from './painting-rules.js';
 import {preloadPainting,validatePainting} from './painting.js';
 export function setupPaintingForm(form) {
  let seq=0,checkTimer,presetTouched=false;
  const select=form.querySelector('#preset'),hint=form.querySelector('#hint'),status=form.querySelector('#description-status');
  const demo=form.querySelector('[data-action="demo-v2"]');
+ const objectTheme=form.querySelector('#object-theme'),duration=form.querySelector('#duration');
+ let previousPreset='',customTheme=objectTheme.value,customDuration=duration.value;
  form.presetData=null;
  const refresh=()=>{demo.disabled=select.value ? !form.presetData : !form.querySelector('#painting').files.length || (form.dataset.entryMode==='json' && !form.querySelector('#items-json').files.length);};
  form.refreshPaintingDemo=refresh;
  form.syncPaintingPreset=()=>{
   const chosen=!!select.value;
   form.querySelector('#painting-description-field').hidden=chosen;
-  form.querySelector('#painting-duration-field').hidden=chosen;
+  objectTheme.readOnly=chosen;objectTheme.setCustomValidity('');
+  duration.disabled=chosen;
   form.querySelector('#painting-language-field').hidden=chosen;
   form.querySelector('#quiz-language').disabled=chosen;
   form.querySelector('#painting-imports').hidden=chosen;
@@ -36,7 +39,10 @@ export function setupPaintingForm(form) {
   presetTouched=true;
   const request=++seq;clearTimeout(checkTimer);form.presetData=null;status.textContent='';
   const id=select.value;
-  if(!id)hint.value='';
+  if(id&&!previousPreset){customTheme=objectTheme.value;customDuration=duration.value;}
+  if(!id){hint.value='';objectTheme.value=customTheme;duration.value=customDuration;}
+  else objectTheme.value='';
+  previousPreset=id;
   form.syncPaintingPreset();
   if(!id)return;
   hint.value=select.selectedOptions[0].dataset.description;
@@ -45,6 +51,7 @@ export function setupPaintingForm(form) {
    const {data}=await rpc('painting_preset',{p_id:id});
    await preloadPainting(data.image_path);
    if(!form.isConnected||request!==seq)return;
+   objectTheme.value=data.object_theme||'';duration.value=String(data.duration_seconds);
    form.presetData=data;status.textContent='';refresh();
   } catch {if(form.isConnected&&request===seq)status.textContent=t('presetLoadError');}
  });
@@ -60,13 +67,17 @@ export function setupPaintingForm(form) {
    }catch{if(form.isConnected&&request===seq)status.textContent='';}
   },400);
  });
+ objectTheme.addEventListener('input',()=>{
+  objectTheme.setCustomValidity('');
+  try{validateObjectTheme(objectTheme.value);}catch(e){objectTheme.setCustomValidity(e.message);}
+ });
  form.addEventListener('change',refresh);
  refresh();
 }
 export async function paintingDraft(form) {
  if(form.querySelector('#preset').value){
   if(!form.presetData)throw Error(t('presetLoading'));
-  return {items:validateItems(form.presetData.items),hint:form.presetData.description,image:await preloadPainting(form.presetData.image_path),presetId:form.presetData.id};
+  return {items:validateItems(form.presetData.items),hint:validateObjectTheme(form.presetData.object_theme),image:await preloadPainting(form.presetData.image_path),presetId:form.presetData.id};
  }
  const file=form.querySelector('#painting').files[0],json=form.querySelector('#items-json').files[0];
  const manual=form.dataset.entryMode==='manual';
@@ -74,7 +85,7 @@ export async function paintingDraft(form) {
  if(!manual&&!json)throw Error(t('paintingChooseFiles'));
  await validatePainting(file);
  const values=manual?form.readManualItems():{items:validateItems(JSON.parse(await json.text()))};
- return {file,...values,hint:form.querySelector('#hint').value};
+ return {file,...values,hint:validateObjectTheme(form.querySelector('#object-theme').value)};
 }
 export async function openPaintingDemo(form,{esc,music,audioToggle,itemReward,avatar,setAtmosphere,background}) {
  const draft=await paintingDraft(form);

@@ -24,6 +24,10 @@ export function validateDescription(value) {
  return clean;
 }
 
+export function validateObjectTheme(value) {
+ try{return validateDescription(value);}catch{throw Error(t('objectThemeLimit'));}
+}
+
 export class PaintingDemo {
  constructor(items) { this.items=validateItems(items);this.found=new Set();this.wrong=new Set();this.score=0; }
  get complete() { return this.found.size===this.items.length; }

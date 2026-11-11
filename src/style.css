@@ -6,6 +6,7 @@
   font-synthesis: none;
   --mint: #a8efd4;
   --pink: #a52761;
+  --podium-overlay: rgba(120, 120, 120, 0.7);
   --line: #dce6df;
 }
 * {
@@ -1172,7 +1173,7 @@ header .header-note {
 .question-demo .question-card { margin-top: 12px; }
 .question-demo .answer { min-height: 100px; aspect-ratio: auto; }
 /* Reserve the viewport bottom for the fixed crowd, beneath the return button. */
-body.podium { --crowd-bottom: 0svh; --podium-header: 112px; --podium-overlay: rgba(120, 120, 120, 0.7); }
+body.podium { --crowd-bottom: 0svh; --podium-header: 112px; }
 body.podium:has(.winner-banner) { --crowd-bottom: 10svh; }
 body.podium main { min-height: 0; padding-block: 0; }
 .podium-screen {
@@ -1288,3 +1289,7 @@ body.podium main { min-height: 0; padding-block: 0; }
 .room-number-input input[type="text"] { width:100%; border:0; background:transparent; padding-left:6px; font-size:16px; font-variant-numeric:tabular-nums; box-shadow:none; }
 
 .painting-score-badge { display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; min-width:84px; min-height:44px; padding:9px 16px; background:var(--mint); color:var(--pink); border:1px solid #ffffffc9; border-radius:14px; box-shadow:0 4px 16px #15382a20; font-size:20px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.2; }
+
+.v2-waiting { padding-bottom:max(100px,14svh); }
+.waiting-theme-banner { position:fixed; bottom:0; left:0; right:0; z-index:3; min-height:10svh; padding:16px max(20px,calc((100vw - 650px)/2)); padding-bottom:max(16px,env(safe-area-inset-bottom)); background:var(--podium-overlay); color:var(--pink); text-align:center; font-size:clamp(14px,3.5vw,17px); line-height:1.6; overflow-wrap:anywhere; }
+.waiting-theme-banner strong { font-weight:800; }

@@ -57,3 +57,11 @@ test('demo wrong accents lose points without blocking valid answers or awarding 
  assert.deepEqual(demo.guess('école'),{correct:false,duplicate:false,points:700});
  assert.equal(demo.guess('ecole').points,1200);assert.equal(demo.complete,true);
 });
+
+test('object themes are required, keep accents and capitalization, and allow at most four words',async()=>{
+ const {validateObjectTheme}=await import('../src/painting-rules.js');
+ assert.equal(validateObjectTheme('  Objets   de classe  '),'Objets de classe');
+ assert.equal(validateObjectTheme('Été au jardin'),'Été au jardin');
+ assert.throws(()=>validateObjectTheme(''));
+ assert.throws(()=>validateObjectTheme('one two three four five'));
+});

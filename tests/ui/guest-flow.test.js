@@ -29,8 +29,8 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
  const timeout=w.setTimeout.bind(w);
  w.setTimeout=(fn,ms,...args)=>timeout(fn,ms>=500&&ms<=3000?30:ms,...args);
  w.testServer={async rpc(name,args){
-  if(name==='painting_presets')return {data:[{id:'french',description:'Classroom Items',quiz_language:'fr'},{id:'english',description:'Garden Objects',quiz_language:'en'}]};
-  if(name==='painting_preset')return {data:{id:args.p_id,description:'Classroom Items',quiz_language:'fr',image_path:'painting.png',items:['cœur'],duration_seconds:120}};
+  if(name==='painting_presets')return {data:[{id:'french',description:'Private Preset Name',quiz_language:'fr'},{id:'english',description:'Garden Objects',quiz_language:'en'}]};
+  if(name==='painting_preset')return {data:{id:args.p_id,description:'Private Preset Name',quiz_language:'fr',image_path:'painting.png',items:['cœur'],duration_seconds:120,object_theme:'Classroom Items'}};
   if(name==='room_info'){state.infoCalls++;assert.equal(args.p_room,'PID-10020');return {data:{theme:'forest',type:'v2',can_join:state.open}};}
   if(name==='join_room'){assert.equal(state.open,true);assert.equal(args.p_character,24);state.joins++;return {data:null};}
   if(name==='submit_item'){assert.equal(args.p_guess,'book');state.meDone=true;return {data:{correct:true,duplicate:false,points:500}};}
@@ -48,16 +48,23 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
   await waitFor(()=>d.querySelector('[data-action=guest]'));
   click('[data-action=host]');click('[data-action=rooms-v2]');
   await waitFor(()=>d.querySelector('#host-v2-form').presetData);
-  assert.equal(d.querySelector('#preset').options[1].textContent,'Classroom Items (French)');
+  assert.equal(d.querySelector('#preset').options[1].textContent,'Private Preset Name (French)');
   assert.equal(d.querySelector('#preset').options[2].textContent,'Garden Objects (English)');
-  assert.equal(d.querySelector('#hint').value,'Classroom Items');
+  assert.equal(d.querySelector('#hint').value,'Private Preset Name');
   assert.equal(d.querySelector('#painting-language-field').hidden,true);
   assert.equal(d.querySelector('#painting-description-field').hidden,true);
-  assert.equal(d.querySelector('#painting-duration-field').hidden,true);
+  assert.equal(d.querySelector('#painting-duration-field').hidden,false);
+  assert.equal(d.querySelector('#duration').disabled,true);
+  assert.equal(d.querySelector('#duration').value,'120');
+  assert.equal(d.querySelector('#object-theme').value,'Classroom Items');
+  assert.equal(d.querySelector('#object-theme').readOnly,true);
   const presets=d.querySelector('#preset');presets.value='';presets.dispatchEvent(new w.Event('change',{bubbles:true}));
   assert.equal(d.querySelector('#painting-language-field').hidden,false);
   assert.equal(d.querySelector('#painting-description-field').hidden,false);
   assert.equal(d.querySelector('#painting-duration-field').hidden,false);
+  assert.equal(d.querySelector('#object-theme').readOnly,false);
+  assert.equal(d.querySelector('#object-theme').placeholder,'Set the theme of the correct objects');
+  assert.equal(d.querySelector('#duration').disabled,false);
   assert.equal(d.querySelector('#quiz-language').value,'en');
   assert.deepEqual([...d.querySelector('#quiz-language').options].map(o=>o.textContent),['English','French']);
   click('[data-action=home]');
@@ -75,7 +82,14 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
   // No second Find Room click: Join fetches the current availability itself.
   submit('#guest-form');await waitFor(()=>d.querySelector('#arena'));
   assert.equal(state.joins,1);assert.equal(state.infoCalls,3);
+  assert.equal(d.querySelector('.waiting-theme-banner').textContent,'When the room starts, identify the objects matching this theme: Classroom Items.');
+  assert.equal(d.querySelector('.waiting-theme-banner strong').textContent,'Classroom Items');
+  assert.ok(!d.querySelector('.waiting-theme-banner').textContent.includes('Private Preset Name'));
+  click('[data-language=frr]');
+  assert.equal(d.querySelector('.waiting-theme-banner').textContent,'Au début de la partie, trouvez les objets correspondant à ce thème : Classroom Items.');
+  click('[data-language=en]');
   state.phase='painting';await waitFor(()=>d.querySelector('#guess-form'));
+  assert.equal(d.querySelector('.waiting-theme-banner'),null);
   d.querySelector('#guess').value='book';submit('#guess-form');
   await waitFor(()=>d.querySelector('#guess')?.disabled);
   assert.equal(d.querySelector('#painting-score').textContent,'500 '+languages.en.points);

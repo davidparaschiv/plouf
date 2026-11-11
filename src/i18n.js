@@ -39,6 +39,7 @@ export function translatedRank(number) {
 export function errorText(error, fallbackKey) {
   const message = error?.message ?? String(error);
   const exact = {
+    "Set the theme of the correct objects in up to four words.": "objectThemeLimit",
     "Choose English or French.": "quizLanguageInvalid",
     "Add at least one complete question.": "questionsRequired",
     "Add at least one correct answer.": "itemsRequired",
