@@ -132,5 +132,41 @@
     "promptTemplate": "One transparent square mobile avatar. Subject: character brief in characters.json. Reference original Panda for polished soft 3D clay/felt materials and fine detail only. Centered portrait, generous transparent padding, readable at 48px, no backdrop, scenery, text or borders.",
     "deliverySizeForNewCharacters": 384,
     "originalCharacterFilesPreserved": true
+  },
+  "v2_plush": [
+    {
+      "name": "Plush #1",
+      "file": "plush-v2-1-975ed8b256.png",
+      "brief": "Consistent 2D head-and-shoulders plush, yellow, happy expression, transparent PNG"
+    },
+    {
+      "name": "Plush #2",
+      "file": "plush-v2-2-9ae76d4ffa.png",
+      "brief": "Consistent 2D head-and-shoulders plush, blue, happy expression, transparent PNG"
+    },
+    {
+      "name": "Plush #3",
+      "file": "plush-v2-3-9ec362dcd9.png",
+      "brief": "Consistent 2D head-and-shoulders plush, red, happy expression, transparent PNG"
+    },
+    {
+      "name": "Plush #4",
+      "file": "plush-v2-4-319c4a45d4.png",
+      "brief": "Consistent 2D head-and-shoulders plush, mint, yellow stars, transparent PNG"
+    },
+    {
+      "name": "Plush #5",
+      "file": "plush-v2-5-3cd573d91a.png",
+      "brief": "Consistent 2D head-and-shoulders plush, pink, pink hearts, transparent PNG"
+    },
+    {
+      "name": "Plush #6",
+      "file": "plush-v2-6-a6df7b4489.png",
+      "brief": "Consistent 2D head-and-shoulders plush, black, tongue out and peace sign, transparent PNG"
+    }
+  ],
+  "v2_backgrounds": {
+    "mobile": "Unchanged 90687.jpg from user-provided abstract-background.zip",
+    "desktop": "Matching landscape adaptation created with built-in image generation"
   }
 }
