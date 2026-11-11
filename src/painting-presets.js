@@ -28,11 +28,7 @@ export function setupPaintingForm(form) {
    const choice=saved!==undefined && available.some(o=>o.value===saved)?saved:available[1]?.value;
    if(choice){select.value=choice;select.dispatchEvent(new Event('change'));}
   }
- }).catch(()=>{
-  if(!form.isConnected)return;
-  // A failed list request must not show an error for an unselected painting.
-  const option=document.createElement('option');option.disabled=true;option.textContent=t('presetsUnavailable');select.append(option);
- });
+ }).catch(()=>{ /* Custom uploads remain available if the preset list cannot be loaded. */ });
  select.addEventListener('change',async()=>{
   presetTouched=true;
   const request=++seq;clearTimeout(checkTimer);form.presetData=null;status.textContent='';
@@ -58,7 +54,7 @@ export function setupPaintingForm(form) {
    try{const {data}=await rpc('painting_description_available',{p_description:hint.value});
     if(!form.isConnected||request!==seq)return;
     hint.setCustomValidity(data?'':t('descriptionTaken'));status.textContent=t(data?'descriptionAvailable':'descriptionTaken');
-   }catch{if(form.isConnected&&request===seq)status.textContent=t('descriptionCheckError');}
+   }catch{if(form.isConnected&&request===seq)status.textContent='';}
   },400);
  });
  form.addEventListener('change',refresh);

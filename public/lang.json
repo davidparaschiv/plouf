@@ -142,7 +142,6 @@
     "descriptionChecking": "Checking description…",
     "descriptionAvailable": "Description available.",
     "descriptionTaken": "That description is already in use. Choose the saved painting above or enter a different description.",
-    "descriptionCheckError": "Unable to check right now. The description will also be checked when creating the room.",
     "presetLoading": "Loading painting…",
     "presetLoadError": "We couldn’t open this painting. Choose another or upload your own.",
     "presetMissing": "Preset not found.",
@@ -180,7 +179,6 @@
     "missingW3": "Enter the third wrong answer.",
     "createRoomError": "We couldn’t create your room. Please try again.",
     "importFileError": "We couldn’t read that file. Please check it and try again.",
-    "presetsUnavailable": "Saved Paintings Are Unavailable Right Now",
     "questionsRequired": "Add at least one complete question.",
     "itemsRequired": "Add at least one correct answer."
   },
@@ -327,7 +325,6 @@
     "descriptionChecking": "Vérification de la description…",
     "descriptionAvailable": "Description disponible.",
     "descriptionTaken": "Cette description est déjà utilisée. Choisissez le tableau enregistré ci-dessus ou indiquez une autre description.",
-    "descriptionCheckError": "Vérification momentanément impossible. La description sera aussi vérifiée lors de la création.",
     "presetLoading": "Chargement du tableau…",
     "presetLoadError": "Impossible d’ouvrir ce tableau. Choisissez-en un autre ou importez le vôtre.",
     "presetMissing": "Tableau prédéfini introuvable.",
@@ -365,7 +362,6 @@
     "missingW3": "Saisissez la troisième mauvaise réponse.",
     "createRoomError": "Impossible de créer votre salle. Veuillez réessayer.",
     "importFileError": "Impossible de lire ce fichier. Vérifiez-le et réessayez.",
-    "presetsUnavailable": "Les tableaux enregistrés sont indisponibles pour le moment",
     "questionsRequired": "Ajoutez au moins une question complète.",
     "itemsRequired": "Ajoutez au moins une bonne réponse."
   }
