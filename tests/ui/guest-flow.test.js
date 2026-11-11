@@ -36,13 +36,13 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
  w.setTimeout=(fn,ms,...args)=>timeout(fn,ms>=500&&ms<=3000?30:ms,...args);
  w.testServer={async rpc(name,args){
   if(name==='painting_presets')return {data:[{id:'french',description:'Private Preset Name',quiz_language:'fr'},{id:'english',description:'Garden Objects',quiz_language:'en'}]};
-  if(name==='painting_preset')return {data:{id:args.p_id,description:'Private Preset Name',quiz_language:'fr',image_path:'painting.png',items:['cœur'],duration_seconds:120,object_theme:'Classroom Items'}};
+  if(name==='painting_preset')return {data:{id:args.p_id,description:'Private Preset Name',quiz_language:'fr',image_path:'painting.png',items:['cœur','une fenêtre'],duration_seconds:120,object_theme:'Classroom Items'}};
   if(name==='room_info'){state.infoCalls++;assert.equal(args.p_room,'PID-10020');return {data:{theme:'forest',type:'v2',can_join:state.open}};}
   if(name==='join_room'){assert.equal(state.open,true);assert.equal(args.p_character,24);state.joins++;return {data:null};}
   if(name==='submit_item'){assert.equal(args.p_guess,'book');state.meDone=true;return {data:{correct:true,duplicate:false,points:500}};}
   if(name==='room_snapshot'){
    const finished=state.meDone&&state.otherDone;
-   return {offset:0,data:{id:'PID-10020',type:'v2',theme:'forest',host:false,member_id:'alice',session_id:'session-1',question_index:0,phase:finished?'finished':state.phase,started:!finished,playing:!finished&&state.phase==='painting',members:finished?[me,bob]:state.phase==='waiting'?[me,bob]:[{...me,points:state.meDone?500:0,rank:undefined}],guest_count:2,points:state.meDone?500:0,found_items:state.meDone?['book']:[],total_items:1,hint:'Classroom Items',image_path:'painting.png',duration_seconds:120,deadline:new Date(Date.now()+120000).toISOString()}};
+   return {offset:0,data:{id:'PID-10020',type:'v2',theme:'forest',host:false,member_id:'alice',session_id:'session-1',question_index:0,phase:finished?'finished':state.phase,started:!finished,playing:!finished&&state.phase==='painting',members:finished?[me,bob]:state.phase==='waiting'?[me,bob]:[{...me,points:state.meDone?500:0,rank:undefined}],guest_count:2,points:state.meDone?500:0,found_items:state.meDone?['book']:[],...(finished?{words:[{word:'book',correct:true}]}:{}),total_items:1,hint:'Classroom Items',image_path:'painting.png',duration_seconds:120,deadline:new Date(Date.now()+120000).toISOString()}};
   }
   throw Error('Unexpected request '+name);
  }};
@@ -65,6 +65,18 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
   assert.ok(d.querySelector('#quiz-import a').href.endsWith('example-questions-fr.json'));
   click('[data-language=en]');click('[data-action=rooms-v2]');
   await waitFor(()=>d.querySelector('#host-v2-form').presetData);
+  click('[data-action=demo-v2]');
+  await waitFor(()=>d.querySelector('.painting-demo [data-finish]'));
+  assert.ok(d.querySelector('.painting-demo [data-finish]').classList.contains('primary'));
+  assert.equal(d.querySelector('.painting-demo [data-finish]').textContent,'I’m Done');
+  const demoForm=d.querySelector('.painting-demo form');demoForm.querySelector('input').value='coeur';
+  demoForm.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
+  click('.painting-demo [data-finish]');
+  assert.deepEqual([...d.querySelectorAll('.painting-demo .words-review tbody td:first-child')].map(td=>td.textContent),['cœur','une fenêtre']);
+  assert.equal(d.querySelectorAll('.painting-demo .word-found').length,1);
+  assert.equal(d.querySelectorAll('.painting-demo .word-missed').length,1);
+  click('.painting-demo [data-close]');
+
   assert.equal(d.querySelector('#preset').options[1].textContent,'Private Preset Name (French)');
   assert.equal(d.querySelector('#preset').options[2].textContent,'Garden Objects (English)');
   assert.equal(d.querySelector('#hint').value,'Private Preset Name');
@@ -135,6 +147,7 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
   click('[data-language=en]');
   state.phase='painting';await waitFor(()=>d.querySelector('#guess-form'));
   assert.equal(d.querySelector('.waiting-theme-banner'),null);
+  assert.match(d.querySelector('#timer').textContent,/^\d+ s$/);
   d.querySelector('#guess').value='book';submit('#guess-form');
   await waitFor(()=>d.querySelector('#guess')?.disabled);
   assert.equal(d.querySelector('#painting-score').textContent,'500 '+languages.en.points);
@@ -145,5 +158,11 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
   assert.equal(d.querySelector('.winner.gold .winner-name').textContent,'Alice');
   assert.equal(d.querySelector('.winner.silver .winner-name').textContent,'Bob');
   assert.equal(d.querySelector('#guess-form'),null);
+  assert.equal(d.querySelector('.words-review h2').textContent,'Words');
+  assert.equal(d.querySelector('.words-review td').textContent,'book');
+  assert.ok(d.querySelector('.words-review .word-found .word-result-icon'));
+  assert.ok(d.body.classList.contains('v2-results'));
+  assert.ok(d.querySelector('.podium-floor').compareDocumentPosition(d.querySelector('.words-review'))&w.Node.DOCUMENT_POSITION_FOLLOWING);
+  click('[data-language=frr]');assert.equal(d.querySelector('.words-review h2').textContent,'Mots');
  }finally{dom.window.close();}
 });

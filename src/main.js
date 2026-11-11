@@ -1,4 +1,5 @@
 import "./style.css";
+import {wordsReview} from './words-review.js';
 import {openPaintingGuide} from './painting-guide-dialog.js';
 import {installLocalizedValidation} from './form-validation.js';
 installLocalizedValidation(document);
@@ -93,7 +94,7 @@ function clearRoom() {
   answerPending = false;
   feedback = "";
   answerRevealUntil = 0;
-  document.body.classList.remove("themed", "podium");
+  document.body.classList.remove("themed", "podium", "v2-results");
   document.querySelector("#background").style.backgroundImage = "";
   setAtmosphere("");
   music.setTrack("lobby");
@@ -409,6 +410,7 @@ function setWorld() {
   const podium = snapshot.phase === "finished";
   document.body.classList.add("themed");
   document.body.classList.toggle("podium", podium);
+  document.body.classList.toggle("v2-results",podium&&snapshot.type==='v2');
   document.querySelector("#background").style.backgroundImage = podium
     ? ""
     : `url("${themeFile(snapshot.theme)}")`;
@@ -436,6 +438,7 @@ function renderRoom() {
     s.answer,
     s.host,
     s.found_items,
+    s.words,
     locale(),
   ]);
   if (sig === signature) {
@@ -548,6 +551,7 @@ function renderPodium() {
   if (snapshot.type === 'v2' && !snapshot.host && Number(me?.rank)>3) {
     app.insertAdjacentHTML('beforeend', `<div class="painting-final-rank">${translatedRank(Number(me.rank))} · ${me.points} ${t('points')}</div>`);
   }
+  if(snapshot.type==='v2'&&!snapshot.host)app.insertAdjacentHTML('beforeend',wordsReview(snapshot.words,esc));
   podiumInteraction.mount(app, snapshot);
   placePodiumPlayers();
 }
@@ -630,7 +634,7 @@ function updateTimer() {
       (new Date(snapshot.deadline).getTime() - Date.now() - offset) / 1000,
     ),
   );
-  el.textContent = left;
+  el.textContent = `${left}${snapshot.type==='v2'&&snapshot.phase==='painting'?' s':''}`;
   if (snapshot.type === 'v2' && snapshot.phase === 'painting' && left === 0)
     app.querySelectorAll('#guess-form input,#guess-form button').forEach(b=>b.disabled=true);
   if (snapshot.phase === "question" && left === 0)
@@ -651,7 +655,6 @@ async function submitItem(form) {
     input.value = '';
     if (!data.duplicate) {
       itemReward(data.correct);
-      toast(data.correct ? '+500 p' : '−100 p');
     } else toast(t('itemRepeated'));
     await poll();
   } catch(error) { toast(errorText(error)); }

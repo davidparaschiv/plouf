@@ -1,3 +1,4 @@
+import {showPointsFeedback} from './points-feedback.js';
 import Phaser from "phaser";
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 let scene,
@@ -176,23 +177,5 @@ export function reward(place) {
 
 // V2 feedback lives in the upper part of the screen, away from the painting.
 export function itemReward(correct) {
-  if (!scene || reduced) return;
-  const { width: w, height: h } = scene.scale;
-  const label = scene.add.text(w / 2, -60, correct ? '+500 p' : '−100 p', {
-    fontFamily: 'Arial', fontSize: '30px', fontStyle: 'bold',
-    color: correct ? '#087943' : '#b31c36', backgroundColor: '#ffffffdd', padding: {x:16,y:8},
-  }).setOrigin(.5);
-  scene.tweens.add({
-    targets: label,
-    y: h * 0.2,
-    duration: 700,
-    ease: 'Cubic.Out',
-    onComplete: () => scene.tweens.add({
-      targets: label,
-      alpha: 0,
-      delay: 200,
-      duration: 300,
-      onComplete: () => label.destroy(),
-    }),
-  });
+  showPointsFeedback(correct,scene,reduced);
 }

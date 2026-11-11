@@ -95,5 +95,20 @@ test('V2 database and demo agree on exact Unicode, ASCII fallback, duplicates an
  const finished=await rpc('room_snapshot',[multiplayer]);
  assert.equal(finished.phase,'finished');assert.equal(finished.playing,false);assert.equal(finished.started,false);
  assert.equal(finished.members.length,2);assert.equal(finished.members[0].points,500);assert.equal(finished.members[1].points,400);
+ // Personal missed-word review is private until the timer ends.
+ await as(host);const reviewRoom=await rpc('create_room_from_preset',[frenchPreset.id,'pass']);await rpc('start_room',[reviewRoom]);
+ await as(guest);await rpc('join_room',[reviewRoom,'Alice',23]);
+ await as(secondGuest);await rpc('join_room',[reviewRoom,'Bob',24]);
+ await as(host);await rpc('play_room',[reviewRoom]);
+ await db.exec('reset role');await db.query("update private.rooms set deadline=clock_timestamp()-interval '0.1 seconds' where id=$1",[reviewRoom]);
+ await as(guest);const reviewing=await rpc('room_snapshot',[reviewRoom]);assert.equal(reviewing.words,undefined);
+ await assert.rejects(rpc('room_snapshot_before_words',[reviewRoom]),/permission denied/);
+ await rpc('submit_item',[reviewRoom,reviewing.session_id,'coeur']);
+ assert.equal((await rpc('room_snapshot',[reviewRoom])).words,undefined);
+ await db.exec('reset role');await db.query("update private.rooms set deadline=clock_timestamp()-interval '1 second' where id=$1",[reviewRoom]);
+ await as(guest);const personal=await rpc('room_snapshot',[reviewRoom]);assert.equal(personal.phase,'finished');
+ assert.deepEqual(personal.words,[{word:'cœur',correct:true},{word:'une fenêtre',correct:false}]);
+ await as(secondGuest);assert.deepEqual((await rpc('room_snapshot',[reviewRoom])).words,[{word:'cœur',correct:false},{word:'une fenêtre',correct:false}]);
+ await as(host);assert.equal((await rpc('room_snapshot',[reviewRoom])).words,undefined);
  }finally{await db.close();}
 });

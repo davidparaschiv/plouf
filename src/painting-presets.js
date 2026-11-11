@@ -1,3 +1,4 @@
+import {wordsReview} from './words-review.js';
 import {rpc} from './api.js';
 import {t} from './i18n.js';
 import {validateItems,itemKey,PaintingDemo,validateDescription,validateObjectTheme} from './painting-rules.js';
@@ -100,10 +101,11 @@ export async function openPaintingDemo(form,{esc,music,audioToggle,itemReward,av
  const podium=()=>{
   clearTimeout(delay);locked=true;
   music.setTrack('podium');setAtmosphere('confetti');dialog.style.backgroundImage='linear-gradient(150deg,#e5ceff,#bca8ea 65%,#f3b69e)';dialog.innerHTML=`<div class="podium-title"><p>${t('wrap')}</p><h2>${t('legendary')}</h2></div><div class="winner gold demo-winner">${avatar(23)}<span class="winner-name">${t('demoPlayer')}</span><span class="winner-points">${game.score} ${t('points')}</span><div class="step">1</div></div><button type="button" class="primary" data-close>${t('back')}</button>`;
+  dialog.insertAdjacentHTML('beforeend',wordsReview(game.items.map(word=>({word,correct:found.has(itemKey(word))})),esc));
   dialog.querySelector('[data-close]').onclick=close;sound();
  };
  const draw=()=>{
-  dialog.innerHTML=`<button type="button" class="back" data-close>${t('back')}</button><section class="painting-game"><div class="painting-stats"><span>${t('demoPlayer')}</span><strong class="painting-score-badge">${game.score} ${t('points')}</strong></div><h2>${esc(draft.hint||t('paintingTitle'))}</h2><p class="demo-background-note">${t('redXNotice')}</p><img class="painting-canvas" src="${esc(image)}" alt="${esc(draft.hint)}"><form class="guess-form"><input type="text" required autocomplete="off" aria-label="${t('guessItem')}" placeholder="${t('guessItem')}"><button type="submit" class="primary">↵</button></form><p>${t('itemsFound',{count:found.size,total:draft.items.length})}</p><div class="found-items">${draft.items.filter(v=>found.has(itemKey(v))).map(v=>`<span>✓ ${esc(v)}</span>`).join('')}</div><button class="back" type="button" data-finish>${t('demoFinish')}</button></section>`;
+  dialog.innerHTML=`<button type="button" class="back" data-close>${t('back')}</button><section class="painting-game"><div class="painting-stats"><span>${t('demoPlayer')}</span><strong class="painting-score-badge">${game.score} ${t('points')}</strong></div><h2>${esc(draft.hint||t('paintingTitle'))}</h2><p class="demo-background-note">${t('redXNotice')}</p><img class="painting-canvas" src="${esc(image)}" alt="${esc(draft.hint)}"><form class="guess-form"><input type="text" required autocomplete="off" aria-label="${t('guessItem')}" placeholder="${t('guessItem')}"><button type="submit" class="primary">↵</button></form><p>${t('itemsFound',{count:found.size,total:draft.items.length})}</p><div class="found-items">${draft.items.filter(v=>found.has(itemKey(v))).map(v=>`<span>✓ ${esc(v)}</span>`).join('')}</div><button class="primary demo-finish" type="button" data-finish>${t('demoFinish')}</button></section>`;
   dialog.querySelector('[data-close]').onclick=close;dialog.querySelector('[data-finish]').onclick=podium;
   dialog.querySelector('form').onsubmit=e=>{
    e.preventDefault();e.stopPropagation();if(locked)return;

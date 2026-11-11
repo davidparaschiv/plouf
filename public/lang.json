@@ -147,7 +147,7 @@
     "presetMissing": "Preset not found.",
     "paintingChooseFiles": "Choose a PNG and an items JSON first.",
     "demoPlayer": "You · Preview",
-    "demoFinish": "See Your Results ↗",
+    "demoFinish": "I’m Done",
     "descriptionPlaceholder": "Four words maximum",
     "paintingDemo": "Demo Questions ↗",
     "entryMethod": "How Would You Like to Add Answers?",
@@ -213,7 +213,12 @@
     "viewGuide": "View the Full Guide",
     "guideContents": "Full painting generation guide",
     "guideCopied": "Instructions Copied",
-    "guideCopyManually": "Select and copy the instructions below, then paste them into ChatGPT."
+    "guideCopyManually": "Select and copy the instructions below, then paste them into ChatGPT.",
+    "words": "Words",
+    "word": "Word",
+    "wordResult": "Result",
+    "wordFound": "Found",
+    "wordMissed": "Not Found"
   },
   "frr": {
     "header": "un peu de compétition entre amis",
@@ -363,7 +368,7 @@
     "presetMissing": "Tableau prédéfini introuvable.",
     "paintingChooseFiles": "Choisissez d’abord un PNG et un fichier JSON.",
     "demoPlayer": "Vous · Aperçu",
-    "demoFinish": "Voir vos résultats ↗",
+    "demoFinish": "J’ai terminé",
     "descriptionPlaceholder": "Quatre mots maximum",
     "paintingDemo": "Démo des questions ↗",
     "entryMethod": "Comment ajouter vos réponses ?",
@@ -429,6 +434,11 @@
     "viewGuide": "Voir le guide complet",
     "guideContents": "Guide complet de création de tableaux",
     "guideCopied": "Instructions copiées",
-    "guideCopyManually": "Sélectionnez et copiez les instructions ci-dessous, puis collez-les dans ChatGPT."
+    "guideCopyManually": "Sélectionnez et copiez les instructions ci-dessous, puis collez-les dans ChatGPT.",
+    "words": "Mots",
+    "word": "Mot",
+    "wordResult": "Résultat",
+    "wordFound": "Trouvé",
+    "wordMissed": "Non trouvé"
   }
 }
