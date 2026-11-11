@@ -182,7 +182,11 @@
     "questionsRequired": "Add at least one complete question.",
     "itemsRequired": "Add at least one correct answer.",
     "quizLanguage": "Quiz Language",
-    "quizLanguageInvalid": "Choose English or French."
+    "quizLanguageInvalid": "Choose English or French.",
+    "objectThemeLabel": "Theme · Up to 4 Words",
+    "objectThemePlaceholder": "Set the theme of the correct objects",
+    "objectThemeLimit": "Set the theme of the correct objects in up to four words.",
+    "waitingThemeNotice": "When the room starts, identify the objects matching this theme: {theme}."
   },
   "frr": {
     "header": "un peu de compétition entre amis",
@@ -367,6 +371,10 @@
     "questionsRequired": "Ajoutez au moins une question complète.",
     "itemsRequired": "Ajoutez au moins une bonne réponse.",
     "quizLanguage": "Langue du quiz",
-    "quizLanguageInvalid": "Choisissez l’anglais ou le français."
+    "quizLanguageInvalid": "Choisissez l’anglais ou le français.",
+    "objectThemeLabel": "Thème · 4 mots maximum",
+    "objectThemePlaceholder": "Définissez le thème des objets à trouver",
+    "objectThemeLimit": "Indiquez le thème des objets à trouver en quatre mots maximum.",
+    "waitingThemeNotice": "Au début de la partie, trouvez les objets correspondant à ce thème : {theme}."
   }
 }
