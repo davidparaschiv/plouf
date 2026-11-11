@@ -38,6 +38,9 @@ export function errorText(error) {
   const message = error?.message ?? String(error);
   const exact = {
     "A new version is available. Refresh this page to answer.": "refreshVersion",
+    "Use a description of at most four words.": "descriptionLimit",
+    "This description is already used. Choose the preset or a different description.": "descriptionTaken",
+    "Preset not found.": "presetMissing",
     "Choose a supported duration.": "durationInvalid",
     "Enter a theme hint (1–160 characters).": "hintInvalid",
     "Enter an item.": "itemEmpty",

@@ -1,5 +1,8 @@
 import "./style.css";
-import {validateItems, createPaintingRoom, preloadPainting, paintingHostForm, renderPainting} from './painting.js';
+import {modeSwitch,setupQuizEntry,setupItemEntry} from './manual-entry.js';
+let quizEntryState={},itemEntryState={};
+import {setupPaintingForm,paintingDraft,openPaintingDemo,validateDescription} from './painting-presets.js';
+import {createPaintingRoom, preloadPainting, paintingHostForm, renderPainting} from './painting.js';
 let hostType = 'v1', paintingImage = '', itemPending = false;
 import { ResponseClock } from "./response-clock.js";
 const responseClock = new ResponseClock();
@@ -149,9 +152,10 @@ async function findGuestRoom() {
 function hostForm(reset = true) {
   if (roomId) return unlockForm();
   currentView = "host";
-  if (reset) { questions = null; hostType = 'v1'; }
-  if (hostType === 'v2') { app.innerHTML = paintingHostForm(esc,back()); return; }
-  app.innerHTML = `<section class="panel">${back()}<h2>${t("hostTitle")}</h2><p class="muted">${t("hostNoteForm")}</p><form id="host-form" class="stack"><div><span class="field-label">${t("chooseWorld")}</span><div class="themes">${themes.map((theme) => `<button type="button" data-theme="${theme.id}" class="theme ${theme.id === selectedTheme ? "selected" : ""}" aria-pressed="${theme.id === selectedTheme}"><img src="${asset(theme.id + ".png")}" alt=""><span>${t(theme.id)}</span></button>`).join("")}</div></div><label class="upload"><span id="upload-label">${t("upload")}</span><input id="questions" type="file" accept="application/json,.json" required></label><a class="back" href="${import.meta.env.BASE_URL}example-questions.json" download style="margin:0">${t("example")}</a><button type="button" class="back" data-action="json-guide-v1" style="margin:0">${t("jsonGuide")}</button><button type="button" class="back" data-action="demo" ${questions?.length ? "" : "disabled"} style="margin:0">${t("demoQuestions")}</button><div><label for="password">${t("password")}</label><input id="password" name="password" type="password" required minlength="4" placeholder="${t("passwordHint")}" autocomplete="new-password"></div><p class="error" id="form-error" hidden></p><button type="button" class="try-v2" data-action="rooms-v2">TRY Rooms V2 ↗</button><button class="primary wide" type="submit">${t("create")}</button></form><button class="back" data-action="unlock" style="margin:20px 0 0">${t("existing")}</button></section>`;
+  if (reset) { questions = null; hostType = 'v1'; quizEntryState={}; itemEntryState={}; }
+  if (hostType === 'v2') { app.innerHTML = paintingHostForm(esc,back()); const form=app.querySelector('#host-v2-form');setupItemEntry(form,itemEntryState,esc);setupPaintingForm(form);return; }
+  app.innerHTML = `<section class="panel">${back()}<h2>${t("hostTitle")}</h2><p class="muted">${t("hostNoteForm")}</p><form id="host-form" class="stack"><div><span class="field-label">${t("chooseWorld")}</span><div class="themes">${themes.map((theme) => `<button type="button" data-theme="${theme.id}" class="theme ${theme.id === selectedTheme ? "selected" : ""}" aria-pressed="${theme.id === selectedTheme}"><img src="${asset(theme.id + ".png")}" alt=""><span>${t(theme.id)}</span></button>`).join("")}</div></div>${modeSwitch()}<div id="manual-quiz" class="manual-quiz stack"></div><div id="quiz-import" class="stack"><label class="upload"><span id="upload-label">${t("upload")}</span><input id="questions" type="file" accept="application/json,.json" required></label><a class="back" href="${import.meta.env.BASE_URL}example-questions.json" download style="margin:0">${t("example")}</a><button type="button" class="back" data-action="json-guide-v1" style="margin:0">${t("jsonGuide")}</button></div><button type="button" class="back" data-action="demo" ${questions?.length ? "" : "disabled"} style="margin:0">${t("demoQuestions")}</button><div><label for="password">${t("password")}</label><input id="password" name="password" type="password" required minlength="4" placeholder="${t("passwordHint")}" autocomplete="new-password"></div><p class="error" id="form-error" hidden></p><button type="button" class="try-v2" data-action="rooms-v2">TRY Rooms V2 ↗</button><button class="primary wide" type="submit">${t("create")}</button></form><button class="back" data-action="unlock" style="margin:20px 0 0">${t("existing")}</button></section>`;
+  setupQuizEntry(app.querySelector('#host-form'),quizEntryState,esc,value=>{questions=value;const demo=app.querySelector('[data-action="demo"]');if(demo)demo.disabled=!questions?.length;});
 }
 
 async function openQuestionDemo() {
@@ -267,8 +271,13 @@ function redrawLanguage() {
     const replacement = document.getElementById(field.id);
     if (!replacement) continue;
     if (field.element) replacement.replaceWith(field.element);
-    else replacement.value = field.value;
+    else if (field.id === 'preset') {
+      app.querySelector('#host-v2-form').dataset.selectedPreset = field.value;
+    } else replacement.value = field.value;
   }
+  app.querySelector('#host-form')?.syncEntryMode?.();
+  app.querySelector('#host-v2-form')?.syncEntryMode?.();
+  app.querySelector('#host-v2-form')?.refreshPaintingDemo?.();
   const file = app.querySelector("#questions")?.files?.[0];
   if (file && questions)
     document.querySelector("#upload-label").textContent = t("questionFile", {
@@ -481,7 +490,7 @@ function renderCountdown() {
   answerPending = false;
   const me = s.members.find((m) => m.id === s.member_id);
   const markers = rankingMarkers(s.members, s.host ? null : s.member_id);
-  app.innerHTML = `<section class="countdown-screen"><div class="${s.question_index > 0 ? "ranking-panel" : ""}">${s.question_index > 0 ? `${!s.host ? `<div class="points">${(me?.points || 0).toLocaleString()} <small>${t("points")}</small></div>` : ""}<div class="road" aria-label="${t("ranking")}">${markers.map((p) => `<div class="marker ${p.id === s.member_id ? "me" : ""}" style="left:${p.position}%"><strong>${translatedRank(p.rank)}</strong><span>${esc(p.name)}</span>${avatar(p.character)}</div>`).join("")}</div>` : `<div style="text-align:center;margin-top:9vh"><p class="eyebrow">${esc(s.id)}</p><h2>${t("hereComes")}</h2></div>`}</div><div class="countdown-number"><p>${s.question_index === 0 ? t("getReady") : t("next")}</p><b id="timer">5</b></div></section>`;
+  app.innerHTML = `<section class="countdown-screen"><div class="${s.question_index > 0 ? "ranking-panel" : ""}">${s.question_index > 0 ? `${!s.host ? `<div class="points">${(me?.points || 0).toLocaleString()} <small>${t("points")}</small></div>` : ""}<div class="road" aria-label="${t("ranking")}">${markers.map((p) => `<div class="marker ${p.id === s.member_id ? "me" : ""}" style="left:${p.position}%"><strong>${translatedRank(p.rank)}</strong><span>${esc(p.name)}</span>${avatar(p.character)}</div>`).join("")}</div>` : `<div style="text-align:center;margin-top:9vh"><p class="eyebrow">${esc(s.id)}</p><h2>${t("hereComes")}</h2></div>`}</div><div class="countdown-number"><p>${s.question_index === 0 ? t("getReady") : t("next")}</p><b id="timer">5</b>${s.type === 'v2' ? `<p class="red-x-notice">${t('redXNotice')}</p>` : ''}</div></section>`;
 }
 function renderQuestion() {
   const s = snapshot;
@@ -694,6 +703,13 @@ app.addEventListener("click", async (e) => {
     hostType = action === 'rooms-v2' ? 'v2' : 'v1';
     hostForm(false); window.scrollTo({top:0}); return;
   }
+  if (action === 'demo-v2') {
+    const button=e.target.closest('button');button.disabled=true;
+    try { await openPaintingDemo(app.querySelector('#host-v2-form'),{esc,music,audioToggle,itemReward,avatar,setAtmosphere,background:themeFile('forest')}); }
+    catch(error){toast(errorText(error));}
+    finally{if(button.isConnected)app.querySelector('#host-v2-form')?.refreshPaintingDemo?.();}
+    return;
+  }
   if (action === "demo") return openQuestionDemo();
   if (action === "home") {
     roomId = "";
@@ -751,20 +767,22 @@ app.addEventListener("change", async (e) => {
     return;
   }
   if (e.target.id !== "questions") return;
-  questions = null;
-  app.querySelector('[data-action="demo"]').disabled = true;
+  const state=quizEntryState, file=e.target.files[0];
+  app.querySelector('#host-form').setImportedQuestions(null);
   try {
-    const file = e.target.files[0];
     if (!file) return;
-    questions = validateQuestions(JSON.parse(await file.text()));
-    app.querySelector('[data-action="demo"]').disabled = !questions.length;
-    document.querySelector("#upload-label").textContent = t("questionFile", {
-      count: questions.length,
-      name: file.name,
-    });
+    const imported=validateQuestions(JSON.parse(await file.text()));
+    if(quizEntryState!==state || e.target.files[0]!==file)return;
+    state.imported=imported;
+    const form=app.querySelector('#host-form');
+    if(!form)return;
+    form.setImportedQuestions(imported);
+    form.querySelector('#upload-label').textContent=t('questionFile',{count:imported.length,name:file.name});
   } catch (error) {
+    if(quizEntryState!==state || e.target.files[0]!==file)return;
     e.target.value = "";
-    document.querySelector("#upload-label").textContent = t("upload");
+    const label=app.querySelector('#upload-label');
+    if(label)label.textContent = t("upload");
     toast(errorText(error));
   }
 });
@@ -780,10 +798,15 @@ app.addEventListener("submit", async (e) => {
   try {
     const fields = new FormData(e.target);
     if (e.target.id === 'host-v2-form') {
-      const items = validateItems(JSON.parse(await fields.get('items').text()));
-      roomId = await createPaintingRoom({file:fields.get('painting'),items,password:fields.get('password'),hint:fields.get('hint'),duration:Number(fields.get('duration'))});
+      const draft = await paintingDraft(e.target);
+      if(draft.presetId) {
+        roomId=(await call('create_room_from_preset',{p_preset:draft.presetId,p_password:fields.get('password'),p_duration:Number(fields.get('duration'))})).data;
+      } else {
+        const hint=validateDescription(fields.get('hint'));
+        roomId = await createPaintingRoom({...draft,password:fields.get('password'),hint,duration:Number(fields.get('duration'))});
+      }
     } else if (e.target.id === "host-form") {
-      if (!questions) throw Error("Upload your questions first.");
+      if (!questions) throw Error(e.target.dataset.entryMode === 'manual' ? t('createQuizFirst') : 'Upload your questions first.');
       const { data } = await call("create_room", {
         p_theme: selectedTheme,
         p_password: fields.get("password"),

@@ -58,13 +58,28 @@ test('V1 and V2 database lifecycle, authorization, Unicode, scoring and finish',
  for (const duration of [30,60,300]) {
   const path=host+'/'+duration+'.png';
   await db.query("insert into storage.objects(bucket_id,name) values('paintings',$1)",[path]);
-  const timed=await rpc('create_painting_room',['pass','Theme',path,JSON.stringify(['x']),duration]);
+  const timed=await rpc('create_painting_room',['pass','Theme '+duration,path,JSON.stringify(['x']),duration]);
   await rpc('start_room',[timed]);await as(a);await rpc('join_room',[timed,'Alice',23]);await as(host);await rpc('play_room',[timed]);
   await admin(`update private.rooms set deadline=clock_timestamp()-interval '0.1 seconds' where id='${timed}'`);
   const state=await rpc('room_snapshot',[timed]);
   assert.equal(state.duration_seconds,duration);
   assert.ok(new Date(state.deadline)-new Date(state.server_time)> (duration-1)*1000);
  }
+ // Shared presets retain a unique description while permitting independent rooms.
+ const presets=await rpc('painting_presets',[]);
+ const preset=presets.find(p=>p.description==='Objects');assert.ok(preset);
+ assert.equal(await rpc('painting_description_available',['  OBJECTS  ']),false);
+ assert.equal(await rpc('painting_description_available',['Fresh painting']),true);
+ await assert.rejects(rpc('create_painting_room',['pass','one two three four five',host+'/painting.png','[]',30]),/four words/);
+ await db.query("insert into storage.objects(bucket_id,name) values('paintings',$1)",[host+'/duplicate.png']);
+ await assert.rejects(rpc('create_painting_room',['pass','  OBJECTS ',host+'/duplicate.png','[]',30]),/already used/);
+ await as(b);
+ const preview=await rpc('painting_preset',[preset.id]);assert.equal(preview.items.length,3);
+ assert.equal(await rpc('can_read_painting',[preview.image_path]),true);
+ const reused=await rpc('create_room_from_preset',[preset.id,'password',60]);
+ const reusedSnapshot=await rpc('room_snapshot',[reused]);assert.equal(reusedSnapshot.host,true);assert.equal(reusedSnapshot.hint,'Objects');assert.equal(reusedSnapshot.duration_seconds,60);
+ await assert.rejects(rpc('create_painting_room_base',['pass','Other',host+'/painting.png','[]',30]),/permission denied/);
+ await as(host);
  // V1 still uses the original quiz flow and timing.
  const v1=await rpc('create_room',['forest','pass',JSON.stringify([{Q:'Q?',C:'Yes',W1:'No',W2:'Maybe',W3:'Never'}])]);
  await rpc('start_room',[v1]);await as(a);await rpc('join_room',[v1,'Alice',23]);await as(host);await rpc('play_room',[v1]);

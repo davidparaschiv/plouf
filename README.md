@@ -51,7 +51,7 @@ At the end, every participant appears as a slowly wandering icon within a bounde
 
 ## Questions
 
-Upload a JSON array. Order is preserved; each entry must contain five nonempty text fields and four distinct answers:
+Manual entry is selected by default. Fill in each question and its four answers, use Next to add another question, then Create Quiz to finalize. Edit Quiz reopens the authoring wizard. The Manual / Import JSON switch keeps both drafts while switching modes. Alternatively, upload a JSON array. Order is preserved; each entry must contain five nonempty text fields and four distinct answers:
 
 ```json
 [
@@ -107,7 +107,7 @@ python3 -m unittest discover -s tests -p 'test_*.py'
 
 Browser checks cover the mobile layout. Supabase commands and migrations were deliberately not executed, so live multiplayer, database concurrency and remote deployment still require an integration check after setup.
 
-The host form’s “Demo questions” link previews the currently uploaded JSON locally, one player at a time, without countdowns or timers. Answer feedback lasts 1.4 seconds before automatic advancement; completion closes the preview without changing the upload.
+The host form’s “Demo questions” link previews the currently finalized manual questions or uploaded JSON locally, one player at a time, without countdowns or timers. Answer feedback lasts 1.4 seconds before automatic advancement; completion closes the preview without changing the upload.
 
 The supplied podium recording uses source 1:49–2:14 as a 25-second intro, then loops source 1:57.76–2:07.76. It has a 0.45-second opening fade and equal-power crossfades into and around the loop. The podium loop has no silence gap; other music keeps its 1.75-second repeat gap. Edit details are in `public/audio/podium-edit.json`.
 
@@ -117,16 +117,25 @@ After syncing migrations, publish the matching frontend and refresh any already-
 
 Classic rooms default to `type = v1`; their existing flow and scoring remain. The host form's **TRY Rooms V2** button opens the painting room form. V2 uses the magical-forest characters, atmosphere and music, and reuses the existing lobby, Start/Play controls, room URL/password, sound toggle and final podium.
 
-Upload one PNG (up to 5 MB), enter a textual theme hint, choose 30, 60, 120 or 300 seconds, and upload `items.json`. A square image is recommended, but other PNG proportions are accepted and stretched without cropping. Put relevant items and optional distractors in the picture; the JSON contains **only correct names**, for example:
+Upload one PNG (up to 5 MB), enter a textual theme hint, choose 30, 60, 120 or 300 seconds, and enter correct answers using the default Manual list and its + button, or select Import JSON to upload `items.json`. A square image is recommended, but other PNG proportions are accepted and fitted without cropping or distortion. Put relevant items and optional distractors in the picture; the JSON contains **only correct names**, for example:
 
 ```json
 ["une fenêtre", "a blue chair", "un cœur"]
 ```
 
-Each entry is one distinct item, not an alternative spelling of another entry. Arbitrary Unicode is accepted independently of the EN/FR interface language. Database values retain their accents and are normalized to lowercase with collapsed whitespace. Matching additionally ignores accents and expands ligatures (`cœur` / `coeur`); it does not translate `apple` to `pomme`. Names that collide under this normalization are rejected. Both host forms have EN/FR JSON guides and downloadable examples; V2 also has an image guide.
+Each entry is one distinct item, not an alternative spelling of another entry. Arbitrary Unicode is accepted independently of the EN/FR interface language. Database values retain their accents and are normalized to lowercase with collapsed whitespace. ASCII-only guesses (English letters, digits, spaces and standard punctuation) match the accent-free database version, including expanded ligatures (`coeur` → `cœur`). Guesses containing any non-ASCII character require an exact spelling and accent match after case/whitespace/NFC normalization: `café` matches `café`, while `cafè` does not. This does not translate `apple` to `pomme`. Names that collide under this normalization are rejected. Both host forms have EN/FR JSON guides and downloadable examples; V2 also has an image guide.
 
 After 3–2–1, players type an item and press Enter. Each first correct item gives 500 points and each first incorrect guess costs 100; repeated normalized guesses have no further effect. A player who finds everything waits until all members finish or the shared server deadline expires. Host standings poll every 3 seconds during play; players poll every second, see their score and participant count, and receive no live ranking or other players' scores from the API. Non-podium players see their final rank at the top right. Restarting clears members, guesses and scores while retaining the painting and accepted items.
 
 Apply `202611110001_painting_rooms.sql` with the sync script **before deploying the new frontend**. It adds room types, private painting/guess tables, RPCs and a private `paintings` Storage bucket with authenticated upload/read policies. Images are uploaded under the creator's user ID and accessed through signed URLs, decoded before the game begins. The frontend never uploads the entire JSON file to Storage; it sends the parsed list to the creation RPC. No migration or remote Supabase command was run during this implementation.
 
 `npm run test:integration` executes the SQL migrations and V1/V2 lifecycles against isolated PGlite PostgreSQL with real pgcrypto/unaccent extensions and lightweight Auth/Storage schema fixtures. It covers Unicode matching, duplicate scoring, authorization, hidden rankings, all durations, all-finished/timeout outcomes, restart and V1 regression. It does not contact Supabase or verify the hosted Auth/Storage HTTP services. `npm test` also covers the browser normalization rules. A live Supabase multiplayer check is still needed after migration.
+
+
+### V2 presets and previews
+
+Apply `202611110002_painting_presets.sql` after the base V2 migration before publishing these controls. New uploads require a description of at most four words. The form checks availability while typing; a database unique index enforces case/whitespace-insensitive uniqueness atomically. Creating an uploaded room also saves its painting as a shared preset. Eligible existing V2 paintings are backfilled, keeping existing rooms intact. Presets are named by their descriptions; choosing one reuses that description, image and correct items for an independent new room with its own password and duration. The default selector is None; selecting a preset hides and disables the PNG and answer-entry fields. Authenticated hosts can intentionally read shared preset answers for previewing.
+
+The V2 demo uses the current manual answers and PNG, imported files, or selected preset, without requiring a password or creating a room. Every opening starts from zero; guesses use the same normalization and +500/−100 duplicate rules. It starts with a three-second countdown and has no answering deadline. It uses the entire uploaded or preset answer list, not a single sample item. Finding all items (or selecting Finish demo) shows a local single-player podium, then Back returns to the unchanged form. Forest music plays during the demo, podium music at completion, and the previous lobby music resumes when closed; the user's mute setting never changes. The live V2 3–2–1 countdown and demo both explain in EN/FR that red-X-marked objects are excluded background scenery.
+
+Apply `202611110003_exact_accent_guesses.sql` before deploying the matching frontend. It updates V2 guessing only: ASCII inputs can omit accents; Unicode inputs require the stored spelling. Correct alternate spellings still score only once, and a wrong accent does not prevent a later valid answer from scoring. No remote migration was run.
