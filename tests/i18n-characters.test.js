@@ -31,11 +31,14 @@ test("EN and FR dictionaries have matching keys, preserve accents, and interpola
     assert.equal(errorText(Error("Room not found.")), "Salle introuvable.");
     assert.equal(
       errorText(Error("Question 2: Q must be text.")),
-      "Question 2 : Q doit être un texte.",
+      "Question 2 : Saisissez la question.",
     );
     setLanguage("en");
     assert.equal(translatedRank(23), "23rd");
     assert.equal(t("guest"), "Guest");
+    assert.equal(errorText(Error("Question 3: W2 must be text.")), "Question 3: Enter the second wrong answer.");
+    assert.equal(errorText(Error("permission denied for table paintings"), "createRoomError"), "We couldn’t create your room. Please try again.");
+    assert.equal(errorText(Error(t("createQuizFirst")), "createRoomError"), t("createQuizFirst"));
   } finally {
     globalThis.fetch = previous;
     setLanguage("en");
@@ -63,4 +66,32 @@ test("four categories contain exactly N unique characters, keeping all original 
   const broken = structuredClone(data);
   broken.categories.jungle[0].id = broken.categories.christmas[0].id;
   assert.throws(() => validateCatalog(broken));
+});
+
+test('every literal UI translation exists in English and French', async()=>{
+ const {readdir}=await import('node:fs/promises');
+ const dictionary=JSON.parse(await readFile(new URL('../public/lang.json',import.meta.url),'utf8'));
+ for(const file of await readdir(new URL('../src/',import.meta.url))){
+  if(!file.endsWith('.js'))continue;
+  const source=await readFile(new URL('../src/'+file,import.meta.url),'utf8');
+  for(const match of source.matchAll(/\bt\(\s*(['"])([^'"]+)\1\s*[,)]/g)){
+   for(const language of ['en','frr'])assert.ok(dictionary[language][match[2]]?.trim(),`${file}: missing ${language} label ${match[2]}`);
+  }
+ }
+});
+
+test('an older language response cannot expose internal names in a new build', async()=>{
+ const previous=globalThis.fetch;
+ globalThis.fetch=async(_url,options)=>{
+  assert.equal(options.cache,'no-cache');
+  return {ok:true,json:async()=>({en:{hostTitle:'Old title'},frr:{hostTitle:'Ancien titre'}})};
+ };
+ try{
+  await loadLanguages('/lang.json');
+  for(const language of ['en','frr']){
+   setLanguage(language);
+   for(const key of ['paintingUploadNote','presetLabel','fieldQ','fieldC','createQuiz','paintingDemo'])assert.notEqual(t(key),key);
+  }
+  setLanguage('en');assert.equal(t('hostTitle'),'Create a Quiz Room');
+ }finally{globalThis.fetch=previous;setLanguage('en');}
 });

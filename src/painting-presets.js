@@ -24,7 +24,11 @@ export function setupPaintingForm(form) {
   for(const p of data){const option=document.createElement('option');option.value=p.id;option.textContent=p.description;select.append(option);}
   const saved=form.dataset.selectedPreset;
   if(saved && [...select.options].some(o=>o.value===saved)){select.value=saved;select.dispatchEvent(new Event('change'));}
- }).catch(()=>{if(form.isConnected)status.textContent=t('presetLoadError');});
+ }).catch(()=>{
+  if(!form.isConnected)return;
+  // A failed list request must not show an error for an unselected painting.
+  const option=document.createElement('option');option.disabled=true;option.textContent=t('presetsUnavailable');select.append(option);
+ });
  select.addEventListener('change',async()=>{
   const request=++seq;clearTimeout(checkTimer);form.presetData=null;status.textContent='';
   const id=select.value;

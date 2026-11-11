@@ -26,6 +26,7 @@ test('manual quiz wizard validates, finalizes all questions, and keeps independe
  assert.equal(f.checkValidity(),true);assert.equal(questions,null);
  f.querySelector('[data-next]').click();assert.equal(state.index,0);assert.equal(f.querySelector('[data-manual-error]').hidden,false);
  fillQuiz(f,'Première');f.querySelector('[data-next]').click();assert.equal(state.index,1);
+ f.querySelector('[data-next]').click();assert.equal(f.querySelector('[data-manual-error]').textContent,'Question 2: Enter the question.');
  fillQuiz(f,'Deuxième');f.querySelector('[data-prev]').click();assert.equal(f.querySelector('[data-quiz-field=Q]').value,'Première ?');
  f.querySelector('[data-finalize]').click();
  assert.equal(questions.length,2);assert.equal(questions[1].Q,'Deuxième ?');assert.equal(questions[0].C,'cœur');
@@ -52,7 +53,7 @@ test('V2 manual answers start empty, support adding/removing Unicode entries, an
  f.querySelector('[data-entry-mode=manual]').click();assert.deepEqual(f.readManualItems(),{items:['un cœur','une boîte']});
  f.querySelector('[data-remove][data-index="1"]').click();assert.deepEqual(f.readManualItems(),{items:['un cœur']});
  f.querySelector('[data-add]').click();input([...f.querySelectorAll('#manual-items input')].at(-1),'un coeur');
- assert.throws(()=>f.readManualItems(),/unique/);
+ assert.throws(()=>f.readManualItems(),/different/);
 });
 
 test('manual drafts survive a French-language redraw with no wrong-answer list in V2',()=>{

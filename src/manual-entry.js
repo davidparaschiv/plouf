@@ -26,9 +26,9 @@ export function setupQuizEntry(form,state,esc,onChange) {
   const row=state.rows[state.index];
   panel.innerHTML=`<h3>${t('questionNumber',{number:state.index+1})}</h3>${['Q','C','W1','W2','W3'].map(key=>`<label>${t('field'+key)}<input type="text" data-quiz-field="${key}" value="${esc(row[key])}"></label>`).join('')}<p class="error" data-manual-error hidden></p><div class="quiz-editor-actions">${state.index?`<button class="secondary" type="button" data-prev>${t('previousQuestion')}</button>`:''}<button class="secondary" type="button" data-next>${t('nextQuestion')}</button><button class="primary" type="button" data-finalize>${t('createQuiz')}</button></div>`;
   panel.querySelectorAll('[data-quiz-field]').forEach(input=>input.oninput=()=>{row[input.dataset.quizField]=input.value;});
-  const fail=e=>{const el=panel.querySelector('[data-manual-error]');el.hidden=false;el.textContent=errorText(e);};
+  const fail=(e,index)=>{const el=panel.querySelector('[data-manual-error]');el.hidden=false;el.textContent=errorText(index===undefined?e:Error(e.message.replace(/^Question 1:/,`Question ${index+1}:`)));};
   panel.querySelector('[data-prev]')?.addEventListener('click',()=>{state.index--;render();});
-  panel.querySelector('[data-next]').onclick=()=>{try{validateQuestions([row]);state.index++;state.rows[state.index]??=blank();render();panel.querySelector('input').focus();}catch(e){fail(e);}};
+  panel.querySelector('[data-next]').onclick=()=>{try{validateQuestions([row]);state.index++;state.rows[state.index]??=blank();render();panel.querySelector('input').focus();}catch(e){fail(e,state.index);}};
   panel.querySelector('[data-finalize]').onclick=()=>{try{validateQuestions(state.rows.filter(r=>Object.values(r).some(v=>v.trim())));state.finalized=true;render();notify();}catch(e){fail(e);}};
  };
  render();connectMode(form,state,panel,imports,notify);

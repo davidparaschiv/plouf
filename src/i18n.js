@@ -1,4 +1,5 @@
-let messages = { en: {}, frr: {} };
+import bundledMessages from '../public/lang.json' with {type: 'json'};
+let messages = bundledMessages;
 let language = "en";
 try {
   if (localStorage.getItem("plouf-language") === "frr") language = "frr";
@@ -7,11 +8,12 @@ export function locale() {
   return language;
 }
 export async function loadLanguages(url) {
-  const response = await fetch(url);
+  const response = await fetch(url, {cache: "no-cache"});
   if (!response.ok) throw Error("Translations could not load.");
   const data = await response.json();
   if (!data.en || !data.frr) throw Error("Translations need en and frr.");
-  messages = data;
+  // Keep translations tied to this build; an older cached file cannot expose keys.
+  messages = {en: {...data.en, ...bundledMessages.en}, frr: {...data.frr, ...bundledMessages.frr}};
   setLanguage(language);
 }
 export function setLanguage(value) {
@@ -34,7 +36,7 @@ export function translatedRank(number) {
   const mod = number % 100;
   return `${number}${mod >= 11 && mod <= 13 ? "th" : { 1: "st", 2: "nd", 3: "rd" }[number % 10] || "th"}`;
 }
-export function errorText(error) {
+export function errorText(error, fallbackKey) {
   const message = error?.message ?? String(error);
   const exact = {
     "A new version is available. Refresh this page to answer.": "refreshVersion",
@@ -72,9 +74,10 @@ export function errorText(error) {
   };
   if (exact[message]) return t(exact[message]);
   let match = message.match(/^Question (\d+): (Q|C|W1|W2|W3) must be text\.$/);
-  if (match) return t("questionField", { number: match[1], key: match[2] });
+  if (match) return t("questionField", { number: match[1], instruction: t("missing" + match[2]) });
   match = message.match(/^Question (\d+): answers must be different\.$/);
   if (match) return t("answersDifferent", { number: match[1] });
   if (error instanceof SyntaxError) return t("invalidJson");
+  if (fallbackKey && !Object.values(messages[language]).includes(message) && !Object.values(messages.en).includes(message)) return t(fallbackKey);
   return message;
 }

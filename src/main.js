@@ -154,7 +154,7 @@ function hostForm(reset = true) {
   currentView = "host";
   if (reset) { questions = null; hostType = 'v1'; quizEntryState={}; itemEntryState={}; }
   if (hostType === 'v2') { app.innerHTML = paintingHostForm(esc,back()); const form=app.querySelector('#host-v2-form');setupItemEntry(form,itemEntryState,esc);setupPaintingForm(form);return; }
-  app.innerHTML = `<section class="panel">${back()}<h2>${t("hostTitle")}</h2><p class="muted">${t("hostNoteForm")}</p><form id="host-form" class="stack"><div><span class="field-label">${t("chooseWorld")}</span><div class="themes">${themes.map((theme) => `<button type="button" data-theme="${theme.id}" class="theme ${theme.id === selectedTheme ? "selected" : ""}" aria-pressed="${theme.id === selectedTheme}"><img src="${asset(theme.id + ".png")}" alt=""><span>${t(theme.id)}</span></button>`).join("")}</div></div>${modeSwitch()}<div id="manual-quiz" class="manual-quiz stack"></div><div id="quiz-import" class="stack"><label class="upload"><span id="upload-label">${t("upload")}</span><input id="questions" type="file" accept="application/json,.json" required></label><a class="back" href="${import.meta.env.BASE_URL}example-questions.json" download style="margin:0">${t("example")}</a><button type="button" class="back" data-action="json-guide-v1" style="margin:0">${t("jsonGuide")}</button></div><button type="button" class="back" data-action="demo" ${questions?.length ? "" : "disabled"} style="margin:0">${t("demoQuestions")}</button><div><label for="password">${t("password")}</label><input id="password" name="password" type="password" required minlength="4" placeholder="${t("passwordHint")}" autocomplete="new-password"></div><p class="error" id="form-error" hidden></p><button type="button" class="try-v2" data-action="rooms-v2">TRY Rooms V2 ↗</button><button class="primary wide" type="submit">${t("create")}</button></form><button class="back" data-action="unlock" style="margin:20px 0 0">${t("existing")}</button></section>`;
+  app.innerHTML = `<section class="panel">${back()}<h2>${t("hostTitle")}</h2><p class="muted">${t("hostNoteForm")}</p><form id="host-form" class="stack"><div><span class="field-label">${t("chooseWorld")}</span><div class="themes">${themes.map((theme) => `<button type="button" data-theme="${theme.id}" class="theme ${theme.id === selectedTheme ? "selected" : ""}" aria-pressed="${theme.id === selectedTheme}"><img src="${asset(theme.id + ".png")}" alt=""><span>${t(theme.id)}</span></button>`).join("")}</div></div>${modeSwitch()}<div id="manual-quiz" class="manual-quiz stack"></div><div id="quiz-import" class="stack"><label class="upload"><span id="upload-label">${t("upload")}</span><input id="questions" type="file" accept="application/json,.json" required></label><a class="back" href="${import.meta.env.BASE_URL}example-questions.json" download style="margin:0">${t("example")}</a><button type="button" class="back" data-action="json-guide-v1" style="margin:0">${t("jsonGuide")}</button></div><button type="button" class="back" data-action="demo" ${questions?.length ? "" : "disabled"} style="margin:0">${t("demoQuestions")}</button><div><label for="password">${t("password")}</label><input id="password" name="password" type="password" required minlength="4" placeholder="${t("passwordHint")}" autocomplete="new-password"></div><p class="error" id="form-error" hidden></p><button type="button" class="try-v2" data-action="rooms-v2">${t("tryPaintingRooms")}</button><button class="primary wide" type="submit">${t("create")}</button></form><button class="back" data-action="unlock" style="margin:20px 0 0">${t("existing")}</button></section>`;
   setupQuizEntry(app.querySelector('#host-form'),quizEntryState,esc,value=>{questions=value;const demo=app.querySelector('[data-action="demo"]');if(demo)demo.disabled=!questions?.length;});
 }
 
@@ -833,10 +833,11 @@ app.addEventListener("submit", async (e) => {
     history.replaceState(null, "", url);
     await poll();
   } catch (error) {
+    const message=errorText(error, ['host-form','host-v2-form'].includes(e.target.id)?'createRoomError':undefined);
     if (errorEl.isConnected) {
-      errorEl.textContent = errorText(error);
+      errorEl.textContent = message;
       errorEl.hidden = false;
-    } else toast(errorText(error));
+    } else toast(message);
   } finally {
     busy = false;
     if (button.isConnected) button.disabled = false;

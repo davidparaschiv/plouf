@@ -1271,3 +1271,13 @@ body.podium main { min-height: 0; padding-block: 0; }
 .painting-upload-note { margin:0; font-size:13px; line-height:1.6; }
 .add-item { font-size:22px; padding:4px 14px; min-height:40px; }
 .quiz-summary { margin:0; font-weight:700; color:#087943; }
+
+/* Keep authoring controls readable and consistent on phones. */
+#host-form label, #host-v2-form label { font-size:13px; }
+#host-form input[type="text"], #host-form input[type="password"],
+#host-v2-form input[type="text"], #host-v2-form input[type="password"] { font-size:16px; line-height:1.5; }
+#host-form .back, #host-v2-form .back { align-self:flex-start; margin-bottom:0; font-weight:500; line-height:1.6; text-align:left; }
+.upload input::file-selector-button { font:inherit; font-weight:600; padding:9px 12px; border:0; border-radius:9px; background:var(--mint); color:#15382a; margin-right:10px; cursor:pointer; }
+.upload-guide pre { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.7; border:1px solid var(--line); }
+.painting-demo .painting-stats { font-size:14px; font-weight:600; }
+.painting-demo .painting-game h2 { font-size:clamp(22px,5vw,30px); line-height:1.25; }
