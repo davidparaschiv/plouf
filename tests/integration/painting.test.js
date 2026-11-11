@@ -28,8 +28,8 @@ test('V1 and V2 database lifecycle, authorization, Unicode, scoring and finish',
  const room=await rpc('create_painting_room',['host-password','Objects',host+'/painting.png',JSON.stringify(['  UN  CŒUR ','a blue chair','une boîte'])]);
  assert.equal((await rpc('room_info',[room])).type,'v2');
  await rpc('start_room',[room]);
- await as(a); await rpc('join_room',[room,'Alice',23]);
- await as(b); await rpc('join_room',[room,'Bob',24]);
+ await as(a);await assert.rejects(rpc('join_room',[room,'Alice',23]),/character/);await rpc('join_room',[room,'Alice',40]);
+ await as(b); await rpc('join_room',[room,'Bob',41]);
  await as(host); await rpc('play_room',[room]);
  let s=await rpc('room_snapshot',[room]);assert.equal(s.phase,'countdown');const session=s.session_id;
  await assert.rejects(rpc('submit_item',[room,session,'un coeur']),/Hosts cannot play/);
@@ -49,7 +49,7 @@ test('V1 and V2 database lifecycle, authorization, Unicode, scoring and finish',
  await as(host);s=await rpc('room_snapshot',[room]);assert.equal(s.members.length,2);assert.equal(s.members[0].rank,1);
  await as(b);for (const guess of ['un cœur','a blue chair','une boîte']) await rpc('submit_item',[room,session,guess]);
  s=await rpc('room_snapshot',[room]);assert.equal(s.phase,'finished');assert.equal(s.playing,false);assert.equal(s.started,false);assert.equal(s.members[0].points,1500);
- await as(host);await rpc('start_room',[room]);await as(a);await rpc('join_room',[room,'Alice',23]);await as(host);await rpc('play_room',[room]);
+ await as(host);await rpc('start_room',[room]);await as(a);await rpc('join_room',[room,'Alice',40]);await as(host);await rpc('play_room',[room]);
  await admin(`update private.rooms set deadline=clock_timestamp()-interval '124 seconds' where id='${room}'`);
  s=await rpc('room_snapshot',[room]);assert.equal(s.phase,'finished');
  // Configurable durations, invalid JSON, and ownership validation.
@@ -59,7 +59,7 @@ test('V1 and V2 database lifecycle, authorization, Unicode, scoring and finish',
   const path=host+'/'+duration+'.png';
   await db.query("insert into storage.objects(bucket_id,name) values('paintings',$1)",[path]);
   const timed=await rpc('create_painting_room',['pass','Theme '+duration,path,JSON.stringify(['x']),duration]);
-  await rpc('start_room',[timed]);await as(a);await rpc('join_room',[timed,'Alice',23]);await as(host);await rpc('play_room',[timed]);
+  await rpc('start_room',[timed]);await as(a);await rpc('join_room',[timed,'Alice',40]);await as(host);await rpc('play_room',[timed]);
   await admin(`update private.rooms set deadline=clock_timestamp()-interval '0.1 seconds' where id='${timed}'`);
   const state=await rpc('room_snapshot',[timed]);
   assert.equal(state.duration_seconds,duration);
@@ -82,7 +82,7 @@ test('V1 and V2 database lifecycle, authorization, Unicode, scoring and finish',
  await as(host);
  // V1 still uses the original quiz flow and timing.
  const v1=await rpc('create_room',['forest','pass',JSON.stringify([{Q:'Q?',C:'Yes',W1:'No',W2:'Maybe',W3:'Never'}])]);
- await rpc('start_room',[v1]);await as(a);await rpc('join_room',[v1,'Alice',23]);await as(host);await rpc('play_room',[v1]);
+ await rpc('start_room',[v1]);await as(a);await assert.rejects(rpc('join_room',[v1,'Alice',40]),/character/);await rpc('join_room',[v1,'Alice',23]);await as(host);await rpc('play_room',[v1]);
  s=await rpc('room_snapshot',[v1]);assert.equal(s.type,'v1');assert.equal(s.phase,'countdown');
  await admin(`update private.rooms set deadline=clock_timestamp()-interval '0.1 seconds' where id='${v1}'`);
  s=await rpc('room_snapshot',[v1]);assert.equal(s.phase,'question');assert.equal(s.answers.length,4);

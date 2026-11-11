@@ -66,6 +66,12 @@ test("four categories contain exactly N unique characters, keeping all original 
       .sort((a, b) => a - b),
     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
   );
+  assert.equal(data.plush.length,6);
+  assert.deepEqual(data.plush.map(c=>c.id),[40,41,42,43,44,45]);
+  assert.deepEqual(data.plush.map(c=>c.name.en),['Plush #1','Plush #2','Plush #3','Plush #4','Plush #5','Plush #6']);
+  assert.deepEqual(data.plush.map(c=>c.color),['yellow','blue','red','mint','pink','black']);
+  assert.ok(data.plush.every(c=>c.expression==='happy'));
+  for(const c of data.plush)assert.match(c.file,/^plush-v2-[1-6]-[a-f0-9]{10}\.png$/);
   const broken = structuredClone(data);
   broken.categories.jungle[0].id = broken.categories.christmas[0].id;
   assert.throws(() => validateCatalog(broken));
@@ -97,4 +103,20 @@ test('an older language response cannot expose internal names in a new build', a
   }
   setLanguage('en');assert.equal(t('hostTitle'),'Create a Quiz Room');
  }finally{globalThis.fetch=previous;setLanguage('en');}
+});
+
+test('V2 plush PNGs and both backgrounds exist with matching cache-versioned filenames',async()=>{
+ const {createHash}=await import('node:crypto');
+ const {V2_BACKGROUNDS}=await import('../src/v2-assets.js');
+ const catalog=JSON.parse(await readFile(new URL('../public/characters.json',import.meta.url),'utf8'));
+ for(const file of [...catalog.plush.map(c=>c.file),...Object.values(V2_BACKGROUNDS)]){
+  const bytes=await readFile(new URL('../public/assets/'+file,import.meta.url));
+  assert.ok(bytes.length>0,file);
+  assert.ok(file.includes(createHash('sha256').update(bytes).digest('hex').slice(0,10)),file);
+  if(file.startsWith('plush')){
+   assert.deepEqual([...bytes.subarray(0,8)],[137,80,78,71,13,10,26,10]);
+   assert.equal(bytes[25],6,'RGBA transparency is required');
+   assert.equal(bytes.readUInt32BE(16),bytes.readUInt32BE(20),'Portrait canvas must remain square');
+  }
+ }
 });

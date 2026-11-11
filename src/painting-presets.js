@@ -100,7 +100,7 @@ export async function openPaintingDemo(form,{esc,music,audioToggle,itemReward,av
  const sound=()=>{const btn=audioToggle.cloneNode(true);btn.removeAttribute('id');btn.onclick=()=>{audioToggle.click();btn.setAttribute('aria-pressed',audioToggle.getAttribute('aria-pressed'));btn.setAttribute('aria-label',audioToggle.getAttribute('aria-label'));};dialog.append(btn);};
  const podium=()=>{
   clearTimeout(delay);locked=true;
-  music.setTrack('podium');setAtmosphere('confetti');dialog.style.backgroundImage='linear-gradient(150deg,#e5ceff,#bca8ea 65%,#f3b69e)';dialog.innerHTML=`<div class="podium-title"><p>${t('wrap')}</p><h2>${t('legendary')}</h2></div><div class="winner gold demo-winner">${avatar(23)}<span class="winner-name">${t('demoPlayer')}</span><span class="winner-points">${game.score} ${t('points')}</span><div class="step">1</div></div><button type="button" class="primary" data-close>${t('back')}</button>`;
+  music.setTrack('podium');setAtmosphere('confetti');dialog.style.backgroundImage='linear-gradient(150deg,#e5ceff,#bca8ea 65%,#f3b69e)';dialog.innerHTML=`<div class="podium-title"><p>${t('wrap')}</p><h2>${t('legendary')}</h2></div><div class="winner gold demo-winner">${avatar(40)}<span class="winner-name">${t('demoPlayer')}</span><span class="winner-points">${game.score} ${t('points')}</span><div class="step">1</div></div><button type="button" class="primary" data-close>${t('back')}</button>`;
   dialog.insertAdjacentHTML('beforeend',wordsReview(game.items.map(word=>({word,correct:found.has(itemKey(word))})),esc));
   dialog.querySelector('[data-close]').onclick=close;sound();
  };
@@ -120,7 +120,7 @@ export async function openPaintingDemo(form,{esc,music,audioToggle,itemReward,av
  dialog.style.backgroundImage=`linear-gradient(#ffffff55,#ffffff55),url("${background}")`;
  dialog.innerHTML=`<button type="button" class="back" data-close>${t('back')}</button><div class="countdown-number"><p>${t('getReady')}</p><b data-demo-countdown>3</b><p class="red-x-notice">${t('redXNotice')}</p></div>`;
  dialog.querySelector('[data-close]').onclick=close;sound();
- document.body.append(dialog);dialog.showModal();music.setTrack('forest');setAtmosphere('forest');
+ document.body.append(dialog);dialog.showModal();music.setTrack('forest');setAtmosphere('');
  const countdownEnd=performance.now()+3000;
  countdownTimer=setInterval(()=>{
   const left=Math.max(0,Math.ceil((countdownEnd-performance.now())/1000));

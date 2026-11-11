@@ -21,16 +21,17 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
  let copiedGuide='',denyClipboard=false;
  const dom=new JSDOM(html,{url:'https://plouf.space/',runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window,d=w.document;
+ const loadedImages=[];
  const state={open:false,phase:'waiting',meDone:false,otherDone:false,infoCalls:0,joins:0};
- const me={id:'alice',name:'Alice',character:23,points:500,rank:1};
- const bob={id:'bob',name:'Bob',character:24,points:500,rank:2};
+ const me={id:'alice',name:'Alice',character:40,points:500,rank:1};
+ const bob={id:'bob',name:'Bob',character:41,points:500,rank:2};
  w.scrollTo=()=>{};
  w.open=()=>{throw Error('The guide must never open an external app or tab');};
  Object.defineProperty(w.navigator,'clipboard',{value:{writeText:async text=>{if(denyClipboard)throw Error('Clipboard permission denied');copiedGuide=text;}}});
  w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
  w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'));};
  w.matchMedia=()=>({matches:true});
- w.Image=class{decode(){return Promise.resolve()}};
+ w.Image=class{set src(value){this._src=value;loadedImages.push(value)}get src(){return this._src}decode(){return Promise.resolve()}};
  w.fetch=async url=>({ok:true,json:async()=>String(url).includes('characters.json')?catalog:languages});
  const timeout=w.setTimeout.bind(w);
  w.setTimeout=(fn,ms,...args)=>timeout(fn,ms>=500&&ms<=3000?30:ms,...args);
@@ -38,7 +39,7 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
   if(name==='painting_presets')return {data:[{id:'french',description:'Private Preset Name',quiz_language:'fr'},{id:'english',description:'Garden Objects',quiz_language:'en'}]};
   if(name==='painting_preset')return {data:{id:args.p_id,description:'Private Preset Name',quiz_language:'fr',image_path:'painting.png',items:['cœur','une fenêtre'],duration_seconds:120,object_theme:'Classroom Items'}};
   if(name==='room_info'){state.infoCalls++;assert.equal(args.p_room,'PID-10020');return {data:{theme:'forest',type:'v2',can_join:state.open}};}
-  if(name==='join_room'){assert.equal(state.open,true);assert.equal(args.p_character,24);state.joins++;return {data:null};}
+  if(name==='join_room'){assert.equal(state.open,true);assert.equal(args.p_character,41);state.joins++;return {data:null};}
   if(name==='submit_item'){assert.equal(args.p_guess,'book');state.meDone=true;return {data:{correct:true,duplicate:false,points:500}};}
   if(name==='room_snapshot'){
    const finished=state.meDone&&state.otherDone;
@@ -52,6 +53,8 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
  try{
   w.eval(code);
   await waitFor(()=>d.querySelector('[data-action=guest]'));
+  for(const c of catalog.plush)assert.ok(loadedImages.some(url=>url.endsWith(c.file)));
+  assert.ok(loadedImages.some(url=>url.includes('v2-background')));
   click('[data-action=host]');
   click('[data-language=frr]');
   assert.equal(d.querySelector('h2').textContent,languages.frr.hostTitle);
@@ -132,13 +135,18 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
   click('[data-action=find-room]');await waitFor(()=>d.querySelector('#form-error').hidden===false);
   const join=d.querySelector('#guest-form [type=submit]');assert.equal(join.disabled,false);
   assert.equal(d.querySelector('#form-error').textContent,languages.en.notOpen);
-  click('[data-character="24"]');
+  assert.equal(d.querySelectorAll('.plush-characters .character').length,6);
+  assert.deepEqual([...d.querySelectorAll('.plush-characters .character span')].map(el=>el.textContent),['Plush #1','Plush #2','Plush #3','Plush #4','Plush #5','Plush #6']);
+  click('[data-character="41"]');
   submit('#guest-form');await waitFor(()=>state.infoCalls===2&&!join.disabled);
   assert.equal(state.joins,0);assert.equal(d.querySelector('#form-error').hidden,false);
   state.open=true;
   // No second Find Room click: Join fetches the current availability itself.
   submit('#guest-form');await waitFor(()=>d.querySelector('#arena'));
   assert.equal(state.joins,1);assert.equal(state.infoCalls,3);
+  assert.ok(d.querySelector('#background').style.backgroundImage.includes('v2-background'));
+  assert.ok(!d.querySelector('#arena').textContent.includes('Plush #'));
+  assert.ok(d.querySelector('#arena .plush-avatar'));
   assert.equal(d.querySelector('.waiting-theme-banner').textContent,'When the room starts, identify the objects matching this theme: Classroom Items.');
   assert.equal(d.querySelector('.waiting-theme-banner strong').textContent,'Classroom Items');
   assert.ok(!d.querySelector('.waiting-theme-banner').textContent.includes('Private Preset Name'));

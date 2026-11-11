@@ -1348,3 +1348,16 @@ body.v2-results .podium-floor { position:relative; bottom:auto; left:auto; right
 #host-form label,
 #host-form .field-label,
 #host-form .manual-quiz h3 { color:var(--pink); }
+
+.plush-characters { grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.plush-characters .character { padding:10px 6px; }
+.plush-characters .avatar { width:clamp(64px,17vw,100px); height:clamp(64px,17vw,100px); }
+.plush-characters .character span { display:block; margin-top:7px; font-size:12px; }
+.room-v2 #background { background-size:100% 100%; }
+.arena .plush-avatar, .plush-characters .avatar, .podium-roamer .plush-avatar { transform-origin:50% 85%; animation:plush-goofy 2.8s ease-in-out infinite; animation-delay:var(--plush-delay,0s); }
+.plush-characters .character:nth-child(2n) { --plush-delay:-.65s; }
+.plush-characters .character:nth-child(3n) { --plush-delay:-1.3s; }
+@keyframes plush-goofy { 0%,100% { transform:rotate(-5deg) translateY(0); } 25% { transform:rotate(7deg) translateY(-3px) scale(1.025,.98); } 50% { transform:rotate(-3deg) translateY(1px) scale(.985,1.02); } 75% { transform:rotate(4deg) translateY(-2px); } }
+@media (prefers-reduced-motion:reduce) { .arena .plush-avatar, .plush-characters .avatar, .podium-roamer .plush-avatar { animation:none; } }
+/* The bottom notices share a readable dark-gray text treatment. */
+.winner-banner, .winner-banner strong, .winner-banner span, .waiting-theme-banner { color:#303d35; }

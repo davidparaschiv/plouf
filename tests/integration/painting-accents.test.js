@@ -62,12 +62,12 @@ test('V2 database and demo agree on exact Unicode, ASCII fallback, duplicates an
  assert.equal(frenchSnapshot.hint,'Classroom Objects');assert.equal(frenchSnapshot.duration_seconds,60);
  await assert.rejects(rpc('create_painting_room',['pass','Bad theme',frPath,'["item"]',60,'en','']),/theme/);
  await assert.rejects(rpc('create_painting_room',['pass','Bad theme',frPath,'["item"]',60,'en','one two three four five']),/theme/);
- await rpc('start_room',[frenchRoom]);await as(guest);await rpc('join_room',[frenchRoom,'French guest',23]);
+ await rpc('start_room',[frenchRoom]);await as(guest);await rpc('join_room',[frenchRoom,'French guest',40]);
  const guestView=await rpc('room_snapshot',[frenchRoom]);
  assert.equal(guestView.hint,'Classroom Objects');assert.equal(guestView.description,undefined);
  await as(host);
  const room=await rpc('create_painting_room',['pass','Accent practice',host+'/accent.png',JSON.stringify(items),120]);
- await rpc('start_room',[room]);await as(guest);await rpc('join_room',[room,'Player',23]);await as(host);await rpc('play_room',[room]);
+ await rpc('start_room',[room]);await as(guest);await rpc('join_room',[room,'Player',40]);await as(host);await rpc('play_room',[room]);
  await db.exec('reset role');await db.query("update private.rooms set deadline=clock_timestamp()-interval '0.1 seconds' where id=$1",[room]);
  await as(guest);const state=await rpc('room_snapshot',[room]);assert.equal(state.phase,'painting');
  for(const guess of ['cafè',' CAFÈ ','café','cafe','cafê','cafe\u0301','cœur','coeur','cœúr',' BLUE-CHAIR   2 ','ÉCOLE','école','ecole','ete','éte','ÉTÉ','雪','雪']){
@@ -80,9 +80,9 @@ test('V2 database and demo agree on exact Unicode, ASCII fallback, duplicates an
  const quickPreset=(await rpc('painting_presets',[])).find(p=>p.description==='Duration 30');
  const multiplayer=await rpc('create_room_from_preset',[quickPreset.id,'pass']);
  await rpc('start_room',[multiplayer]);
- await as(guest);await rpc('join_room',[multiplayer,'First',23]);
+ await as(guest);await rpc('join_room',[multiplayer,'First',40]);
  const secondGuest='00000000-0000-0000-0000-000000000003';
- await as(secondGuest);await rpc('join_room',[multiplayer,'Second',24]);
+ await as(secondGuest);await rpc('join_room',[multiplayer,'Second',41]);
  await as(host);await rpc('play_room',[multiplayer]);
  await db.exec('reset role');await db.query("update private.rooms set deadline=clock_timestamp()-interval '0.1 seconds' where id=$1",[multiplayer]);
  await as(guest);const active=await rpc('room_snapshot',[multiplayer]);
@@ -97,8 +97,8 @@ test('V2 database and demo agree on exact Unicode, ASCII fallback, duplicates an
  assert.equal(finished.members.length,2);assert.equal(finished.members[0].points,500);assert.equal(finished.members[1].points,400);
  // Personal missed-word review is private until the timer ends.
  await as(host);const reviewRoom=await rpc('create_room_from_preset',[frenchPreset.id,'pass']);await rpc('start_room',[reviewRoom]);
- await as(guest);await rpc('join_room',[reviewRoom,'Alice',23]);
- await as(secondGuest);await rpc('join_room',[reviewRoom,'Bob',24]);
+ await as(guest);await rpc('join_room',[reviewRoom,'Alice',40]);
+ await as(secondGuest);await rpc('join_room',[reviewRoom,'Bob',41]);
  await as(host);await rpc('play_room',[reviewRoom]);
  await db.exec('reset role');await db.query("update private.rooms set deadline=clock_timestamp()-interval '0.1 seconds' where id=$1",[reviewRoom]);
  await as(guest);const reviewing=await rpc('room_snapshot',[reviewRoom]);assert.equal(reviewing.words,undefined);

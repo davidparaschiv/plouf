@@ -1,4 +1,5 @@
 import "./style.css";
+import {V2_BACKGROUNDS} from './v2-assets.js';
 import {wordsReview} from './words-review.js';
 import {openPaintingGuide} from './painting-guide-dialog.js';
 import {installLocalizedValidation} from './form-validation.js';
@@ -12,7 +13,7 @@ import { ResponseClock } from "./response-clock.js";
 const responseClock = new ResponseClock();
 import { PodiumInteraction } from "./podium.js";
 const podiumInteraction = new PodiumInteraction();
-import { loadCharacters, themeCharacters } from "./characters.js";
+import { loadCharacters, roomCharacters, characterFile, usesPlush } from "./characters.js";
 import {
   characters,
   themes,
@@ -57,7 +58,7 @@ const esc = (value) =>
       ],
   );
 const avatar = (character, extra = "") =>
-  `<img class="avatar ${extra}" src="${asset(`character-${character}.png`)}" alt="" draggable="false">`;
+  `<img class="avatar ${extra} ${Number(character)>=40?'plush-avatar':''}" src="${asset(characterFile(character))}" alt="" draggable="false">`;
 let roomId = new URLSearchParams(location.search).get("room") || "",
   snapshot = null,
   offset = 0,
@@ -94,7 +95,7 @@ function clearRoom() {
   answerPending = false;
   feedback = "";
   answerRevealUntil = 0;
-  document.body.classList.remove("themed", "podium", "v2-results");
+  document.body.classList.remove("themed", "podium", "v2-results", "room-v2");
   document.querySelector("#background").style.backgroundImage = "";
   setAtmosphere("");
   music.setTrack("lobby");
@@ -111,9 +112,9 @@ function home() {
       `<p class="eyebrow">${esc(roomId)}</p><h1>${t("comeIn")}</h1><p class="muted">${t("joiningHow")}</p>`;
 }
 function characterPicker() {
-  const group = guestRoom ? themeCharacters(guestRoom.theme) : [];
+  const group = guestRoom ? roomCharacters(guestRoom) : [];
   if (!group.length) return `<p class="muted">${t("roomFirst")}</p>`;
-  return `<div><span class="field-label">${t("chooseCharacter")} · ${t(guestRoom.theme)}</span><div class="characters">${group.map((c) => `<button type="button" class="character ${c.id === selected ? "selected" : ""}" data-character="${c.id}" aria-pressed="${c.id === selected}">${avatar(c.id)}<span>${esc(c.name[locale()])}</span></button>`).join("")}</div></div>`;
+  return `<div><span class="field-label">${t("chooseCharacter")}${usesPlush(guestRoom)?'':' · '+t(guestRoom.theme)}</span><div class="characters ${usesPlush(guestRoom)?'plush-characters':''}">${group.map((c) => `<button type="button" class="character ${c.id === selected ? "selected" : ""}" data-character="${c.id}" aria-pressed="${c.id === selected}">${avatar(c.id)}<span>${esc(c.name[locale()])}</span></button>`).join("")}</div></div>`;
 }
 const roomDigits = value => String(value ?? '').replace(/\D/g, '');
 const guestRoomCode = value => roomDigits(value) ? `PID-${roomDigits(value)}` : '';
@@ -124,10 +125,10 @@ function guestForm() {
 async function refreshGuestRoom(room) {
   const {data}=await call('room_info',{p_room:room});
   if(currentView!=='guest' || guestRoomCode(app.querySelector('#room').value)!==room)return null;
-  const changed=guestRoom?.id!==room || guestRoom?.theme!==data.theme;
+  const changed=guestRoom?.id!==room || guestRoom?.theme!==data.theme || guestRoom?.type!==data.type;
   guestRoom={id:room,...data};roomId=room;
   if(changed){
-    selected=themeCharacters(data.theme)[0].id;
+    selected=roomCharacters(data)[0].id;
     app.querySelector('#character-picker').innerHTML=characterPicker();
   }
   return data;
@@ -314,6 +315,7 @@ async function preload() {
   const images = [
     ...characters.map((character) => character.file),
     ...themes.flatMap(({ id }) => [`${id}.png`, `${id}-mobile.png`]),
+    ...Object.values(V2_BACKGROUNDS),
     "role-guest.png",
     "role-host.png",
     "medal-gold.svg",
@@ -406,15 +408,19 @@ function themeFile(theme) {
   ).matches;
   return asset(`${theme}${portrait ? "-mobile" : ""}.png`);
 }
+function v2BackgroundFile() {
+ return asset(matchMedia('(max-width: 900px) and (orientation: portrait)').matches?V2_BACKGROUNDS.mobile:V2_BACKGROUNDS.desktop);
+}
 function setWorld() {
   const podium = snapshot.phase === "finished";
   document.body.classList.add("themed");
+  document.body.classList.toggle("room-v2",snapshot.type==='v2'&&!podium);
   document.body.classList.toggle("podium", podium);
   document.body.classList.toggle("v2-results",podium&&snapshot.type==='v2');
   document.querySelector("#background").style.backgroundImage = podium
     ? ""
-    : `url("${themeFile(snapshot.theme)}")`;
-  setAtmosphere(podium ? "confetti" : snapshot.theme);
+    : `url("${snapshot.type==='v2'?v2BackgroundFile():themeFile(snapshot.theme)}")`;
+  setAtmosphere(podium ? "confetti" : snapshot.type==='v2'?'':snapshot.theme);
   music.setTrack(podium ? "podium" : snapshot.theme);
 }
 function renderRoom() {
@@ -494,6 +500,7 @@ function placeMembers() {
       pad + (Math.floor(slot / cols) * (arena.clientHeight - pad * 2)) / rows;
     const el = document.createElement("div");
     el.className = "waiting-avatar";
+    el.style.setProperty("--plush-delay",`${-(slot%9)*.37}s`);
     el.style.cssText = `left:${x}px;top:${y}px;width:${size}px;height:${size}px;animation-delay:-${Math.random() * 3}s`;
     el.innerHTML = avatar(m.character);
     arena.append(el);
@@ -721,7 +728,7 @@ app.addEventListener("click", async (e) => {
   }
   if (action === 'demo-v2') {
     const button=e.target.closest('button');button.disabled=true;
-    try { await openPaintingDemo(app.querySelector('#host-v2-form'),{esc,music,audioToggle,itemReward,avatar,setAtmosphere,background:themeFile('forest')}); }
+    try { await openPaintingDemo(app.querySelector('#host-v2-form'),{esc,music,audioToggle,itemReward,avatar,setAtmosphere,background:v2BackgroundFile()}); }
     catch(error){toast(errorText(error));}
     finally{if(button.isConnected)app.querySelector('#host-v2-form')?.refreshPaintingDemo?.();}
     return;

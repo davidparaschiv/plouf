@@ -371,5 +371,70 @@
         "brief": "A friendly coral-pink crab with expressive eyes and rounded claws"
       }
     ]
-  }
+  },
+  "plush": [
+    {
+      "id": 40,
+      "file": "plush-v2-1-975ed8b256.png",
+      "name": {
+        "en": "Plush #1",
+        "frr": "Plush #1"
+      },
+      "color": "yellow",
+      "expression": "happy"
+    },
+    {
+      "id": 41,
+      "file": "plush-v2-2-9ae76d4ffa.png",
+      "name": {
+        "en": "Plush #2",
+        "frr": "Plush #2"
+      },
+      "color": "blue",
+      "expression": "happy"
+    },
+    {
+      "id": 42,
+      "file": "plush-v2-3-9ec362dcd9.png",
+      "name": {
+        "en": "Plush #3",
+        "frr": "Plush #3"
+      },
+      "color": "red",
+      "expression": "happy"
+    },
+    {
+      "id": 43,
+      "file": "plush-v2-4-319c4a45d4.png",
+      "name": {
+        "en": "Plush #4",
+        "frr": "Plush #4"
+      },
+      "color": "mint",
+      "expression": "happy",
+      "face": "yellow stars"
+    },
+    {
+      "id": 44,
+      "file": "plush-v2-5-3cd573d91a.png",
+      "name": {
+        "en": "Plush #5",
+        "frr": "Plush #5"
+      },
+      "color": "pink",
+      "expression": "happy",
+      "face": "pink hearts"
+    },
+    {
+      "id": 45,
+      "file": "plush-v2-6-a6df7b4489.png",
+      "name": {
+        "en": "Plush #6",
+        "frr": "Plush #6"
+      },
+      "color": "black",
+      "expression": "happy",
+      "face": "tongue out and peace sign"
+    }
+  ]
 }
