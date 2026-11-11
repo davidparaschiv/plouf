@@ -135,8 +135,8 @@
     "hintInvalid": "Enter a theme hint (1–160 characters).",
     "itemEmpty": "Enter an item.",
     "redXNotice": "Do not guess items marked with a red X. They are part of the background, not part of the game.",
-    "presetLabel": "Choose a Painting",
-    "presetNone": "Upload Your Own Painting",
+    "presetLabel": "Select a Preset",
+    "presetNone": "None",
     "paintingDescription": "Description · Up to 4 Words",
     "descriptionLimit": "Use a description of at most four words.",
     "descriptionChecking": "Checking description…",
@@ -150,7 +150,7 @@
     "demoPlayer": "You · Preview",
     "demoFinish": "See Your Results ↗",
     "descriptionPlaceholder": "Four words maximum",
-    "paintingDemo": "Preview Painting ↗",
+    "paintingDemo": "Demo Questions ↗",
     "entryMethod": "How Would You Like to Add Answers?",
     "manual": "Manual",
     "importJson": "Import JSON",
@@ -180,7 +180,9 @@
     "missingW3": "Enter the third wrong answer.",
     "createRoomError": "We couldn’t create your room. Please try again.",
     "importFileError": "We couldn’t read that file. Please check it and try again.",
-    "presetsUnavailable": "Saved Paintings Are Unavailable Right Now"
+    "presetsUnavailable": "Saved Paintings Are Unavailable Right Now",
+    "questionsRequired": "Add at least one complete question.",
+    "itemsRequired": "Add at least one correct answer."
   },
   "frr": {
     "header": "un peu de compétition entre amis",
@@ -318,8 +320,8 @@
     "hintInvalid": "Indiquez un thème (1 à 160 caractères).",
     "itemEmpty": "Écrivez un objet.",
     "redXNotice": "Ne proposez pas les objets marqués d’une croix rouge. Ils font partie du décor, pas du jeu.",
-    "presetLabel": "Choisir un tableau",
-    "presetNone": "Importer votre propre tableau",
+    "presetLabel": "Sélectionner un modèle",
+    "presetNone": "Aucun",
     "paintingDescription": "Description · 4 mots maximum",
     "descriptionLimit": "Utilisez une description de quatre mots maximum.",
     "descriptionChecking": "Vérification de la description…",
@@ -333,7 +335,7 @@
     "demoPlayer": "Vous · Aperçu",
     "demoFinish": "Voir vos résultats ↗",
     "descriptionPlaceholder": "Quatre mots maximum",
-    "paintingDemo": "Aperçu du tableau ↗",
+    "paintingDemo": "Démo des questions ↗",
     "entryMethod": "Comment ajouter vos réponses ?",
     "manual": "Manuel",
     "importJson": "Importer JSON",
@@ -363,6 +365,8 @@
     "missingW3": "Saisissez la troisième mauvaise réponse.",
     "createRoomError": "Impossible de créer votre salle. Veuillez réessayer.",
     "importFileError": "Impossible de lire ce fichier. Vérifiez-le et réessayez.",
-    "presetsUnavailable": "Les tableaux enregistrés sont indisponibles pour le moment"
+    "presetsUnavailable": "Les tableaux enregistrés sont indisponibles pour le moment",
+    "questionsRequired": "Ajoutez au moins une question complète.",
+    "itemsRequired": "Ajoutez au moins une bonne réponse."
   }
 }
