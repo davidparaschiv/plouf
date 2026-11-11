@@ -1340,3 +1340,11 @@ body.v2-results .podium-floor { position:relative; bottom:auto; left:auto; right
 #host-v2-form label,
 #host-v2-form .field-label,
 #host-v2-form .manual-item-heading h3 { color:var(--pink); }
+
+.guest-join-panel > h2,
+.quiz-host-panel > h2,
+#guest-form label,
+#guest-form .field-label,
+#host-form label,
+#host-form .field-label,
+#host-form .manual-quiz h3 { color:var(--pink); }
