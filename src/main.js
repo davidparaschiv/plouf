@@ -1,4 +1,5 @@
 import "./style.css";
+import {openPaintingGuide} from './painting-guide-dialog.js';
 import {installLocalizedValidation} from './form-validation.js';
 installLocalizedValidation(document);
 import {modeSwitch,setupQuizEntry,setupItemEntry} from './manual-entry.js';
@@ -709,6 +710,7 @@ app.addEventListener("click", async (e) => {
   if (answer) return submitAnswer(Number(answer.dataset.answer), elapsedMs);
   const action = e.target.closest("[data-action]")?.dataset.action;
   if (!action) return;
+  if(action==='chatgpt-painting-guide'){openPaintingGuide({esc,audioToggle});return;}
   if (action === 'painting-guide' || action?.startsWith('json-guide-')) { openUploadGuide(action); return; }
   if (action === 'rooms-v2' || action === 'rooms-v1') {
     hostType = action === 'rooms-v2' ? 'v2' : 'v1';

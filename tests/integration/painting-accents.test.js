@@ -51,12 +51,12 @@ test('V2 database and demo agree on exact Unicode, ASCII fallback, duplicates an
  const frPath=host+'/french.png';
  await db.query("insert into storage.objects(bucket_id,name) values('paintings',$1)",[frPath]);
  await assert.rejects(rpc('create_painting_room',['pass','French classroom',frPath,'["cœur"]',60,'de']),/English or French/);
- await rpc('create_painting_room',['pass','French classroom',frPath,'["cœur"]',60,'fr','Classroom Objects']);
+ await rpc('create_painting_room',['pass','French classroom',frPath,JSON.stringify(['  CŒUR  ','  UNE\t  FENÊTRE  ']),60,'fr','Classroom Objects']);
  const frenchPreset=(await rpc('painting_presets',[])).find(p=>p.description==='French classroom');
  assert.equal(frenchPreset.quiz_language,'fr');
  const frenchData=await rpc('painting_preset',[frenchPreset.id]);
  assert.equal(frenchData.object_theme,'Classroom Objects');
- assert.equal(frenchData.quiz_language,'fr');assert.deepEqual(frenchData.items,['cœur']);
+ assert.equal(frenchData.quiz_language,'fr');assert.deepEqual(frenchData.items,['cœur','une fenêtre']);
  const frenchRoom=await rpc('create_room_from_preset',[frenchPreset.id,'pass']);
  const frenchSnapshot=await rpc('room_snapshot',[frenchRoom]);
  assert.equal(frenchSnapshot.hint,'Classroom Objects');assert.equal(frenchSnapshot.duration_seconds,60);

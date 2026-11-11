@@ -205,7 +205,15 @@
     "invalidResponseTime": "Your answer could not be timed. Refresh the page and try again.",
     "notPaintingRoom": "This room uses the classic quiz game.",
     "alreadyGuest": "You have joined as a guest in this browser. Use another browser to host.",
-    "pageTitle": "Plouf — Live Multiplayer Quiz Game"
+    "pageTitle": "Plouf — Live Multiplayer Quiz Game",
+    "askChatgptPainting": "Ask ChatGPT to Generate a Painting ↗",
+    "chatgptGuideTitle": "Create a Painting with ChatGPT",
+    "chatgptGuideInstructions": "Copy this guide and paste it into ChatGPT. It will ask about your theme, background, number of correct and wrong objects, and answer language. Once you answer, ChatGPT will automatically generate the painting and give you the complete list of correct objects. Upload the painting here and add those names in Manual mode.",
+    "copyGuide": "Copy Instructions",
+    "viewGuide": "View the Full Guide",
+    "guideContents": "Full painting generation guide",
+    "guideCopied": "Instructions Copied",
+    "guideCopyManually": "Select and copy the instructions below, then paste them into ChatGPT."
   },
   "frr": {
     "header": "un peu de compétition entre amis",
@@ -413,6 +421,14 @@
     "invalidResponseTime": "Impossible de mesurer le temps de votre réponse. Actualisez la page et réessayez.",
     "notPaintingRoom": "Cette salle utilise le quiz classique.",
     "alreadyGuest": "Vous avez rejoint la salle comme invité dans ce navigateur. Utilisez un autre navigateur pour l’animer.",
-    "pageTitle": "Plouf — Quiz multijoueur en direct"
+    "pageTitle": "Plouf — Quiz multijoueur en direct",
+    "askChatgptPainting": "Demander à ChatGPT de créer un tableau ↗",
+    "chatgptGuideTitle": "Créer un tableau avec ChatGPT",
+    "chatgptGuideInstructions": "Copiez ce guide et collez-le dans ChatGPT. Il vous demandera le thème, le décor, le nombre d’objets corrects et d’objets pièges, ainsi que la langue des réponses. Une fois vos réponses données, ChatGPT générera automatiquement le tableau et vous fournira la liste complète des objets corrects. Importez le tableau ici et saisissez ces noms en mode Manuel.",
+    "copyGuide": "Copier les instructions",
+    "viewGuide": "Voir le guide complet",
+    "guideContents": "Guide complet de création de tableaux",
+    "guideCopied": "Instructions copiées",
+    "guideCopyManually": "Sélectionnez et copiez les instructions ci-dessous, puis collez-les dans ChatGPT."
   }
 }

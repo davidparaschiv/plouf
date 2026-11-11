@@ -1302,3 +1302,10 @@ body.podium main { min-height: 0; padding-block: 0; }
 .upload { position:relative; }
 .upload input[type="file"] { position:absolute; width:1px; height:1px; padding:0; margin:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
 .upload:focus-within { outline:3px solid var(--pink); outline-offset:3px; }
+
+.chatgpt-guide-link { color:var(--pink); }
+.copy-painting-guide { display:inline-flex; align-items:center; gap:10px; }
+.copy-painting-guide svg { width:20px; height:20px; flex:none; }
+.guide-copy-status { color:var(--pink); margin:12px 0; min-height:1.5em; }
+.painting-guide-preview summary { cursor:pointer; font-size:13px; color:#5c6d62; }
+.painting-guide-preview textarea { display:block; width:100%; min-height:240px; max-height:40svh; margin-top:14px; padding:14px; resize:vertical; border:1px solid var(--line); border-radius:12px; background:white; color:#171c1b; font:13px/1.65 monospace; }

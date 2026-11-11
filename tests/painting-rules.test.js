@@ -9,6 +9,7 @@ test('painting answers preserve Unicode and match accents, ligatures, case and w
  assert.equal(itemKey('a\u00a0 blue chair'),itemKey('a blue chair'));
  assert.notEqual(itemKey('apple'),itemKey('pomme'));
  assert.deepEqual(validateItems(['été','BLUE Chair','猫']),['été','blue chair','猫']);
+ assert.deepEqual(validateItems(['  ÉTAGÈRE\t  BLEUE  ','  CŒUR  ']),['étagère bleue','cœur']);
  assert.throws(()=>validateItems(['boîte','boite']));
  assert.throws(()=>validateItems([3]));
  assert.throws(()=>validateItems([]));

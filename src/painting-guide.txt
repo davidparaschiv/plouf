@@ -1,0 +1,94 @@
+PLOUF V2 — PAINTING AND CORRECT OBJECT LIST CREATION INSTRUCTIONS
+
+When these instructions are pasted into a new chat, use it as the user's instructions for creating Plouf V2 room assets. Do not assume the classroom example below is the new request. Begin by asking the questions below, and wait for answers before generating the painting.
+
+AUTOMATIC FINAL DELIVERY — MANDATORY
+Once the user answers the questions and any necessary constraints are resolved, automatically generate the actual finished painting and provide the COMPLETE list of correct object names. Do not wait for another request to generate the image or give the answers. Do not stop at a plan, an image prompt, or an offer to continue. Deliver both the actual finished PNG image and the complete correct-answer list as the final output, without asking for another approval to start generation.
+
+1. ASK THE USER
+- What is the theme or category of the correct items?
+- Describe the desired background or setting.
+- How many correct items should appear?
+- How many wrong items (distractors) should appear?
+- In which language should accepted answers be written?
+- Any specific required objects, exclusions, colors, or other specifications?
+Ask these together in one concise message. Counts are user-chosen, not fixed at 20 and 6.
+
+2. MANDATORY DIFFICULTY RULE
+50% of the objects must be EASY and 50% must be MEDIUM. Explicitly: NO HARD ITEMS. Do not create hard, obscure, specialist, ambiguous, tiny, or hidden objects.
+Apply this 50/50 easy/medium split to both the correct-item inventory and the distractor inventory, so it also holds for the whole image. This rule applies whatever counts the user chooses.
+If either requested count is odd, an exact half is impossible. Ask whether to change that count to an even number or which difficulty should receive the extra object. Do not silently round or pretend the split is exact.
+Difficulty combines how readily an object can be recognized and how familiar/specific its name is in the chosen language. Easy objects should be instantly recognizable and have common names. Medium objects should be recognizable without obscure knowledge, with slightly more specific vocabulary or distinctive shapes. They must NOT be hard. All objects remain clearly visible; do not use concealment to make them medium.
+
+3. PLAN THE INVENTORY BEFORE GENERATING
+Make an exact checklist of correct and wrong items, including the difficulty of each. Ensure correct items fit the theme; wrong items are clearly outside that category. Prefer one visible instance of each object. Avoid near-duplicates, ambiguous objects, and objects that could plausibly belong to either list. Avoid accepted names that normalize to the same answer.
+Use short, natural, singular names in the requested answer language. Do not put a/an/the before English names by default. Do not combine multiple synonyms in one name. Every correct name must describe a clearly visible object in the painting.
+
+4. IMAGE MUST BE A PAINTING WITH A WOODEN FRAME
+Generate an actual illustrated PAINTING, not a photograph, screenshot, wireframe, grid, icon sheet, or labeled diagram.
+Use a polished, commercially finished, warm painterly storybook illustration with gently modeled 3D depth. Preserve this visual style across different themes: softly textured painted surfaces, rounded friendly forms, convincing material detail such as wood grain and fabric, soft natural sunlight, subtle shadows, warm cream tones, mint green and soft pink accents where suitable, rich but tasteful colors, and a cozy welcoming atmosphere. Objects should have clear silhouettes and be crisp enough to identify on a phone. Avoid flat crude graphics, harsh outlines, plastic-looking low-quality renders and clutter.
+MANDATORY: frame the ENTIRE painting with a medium-brown WOODEN PICTURE FRAME. Show natural wood grain, beveled edges and neat mitered corners. The frame is outside the complete scene, not just around an object inside it. Use roughly 4% of the square width per side, with enough space that it feels like a real framed painting. Preserve all scene contents inside the frame; do not crop, hide, or cover any required objects with it.
+If an approved reference painting is attached, use it as the visual-style reference while changing the subject/background for the new theme. A TXT file alone cannot reproduce a reference image exactly; if close visual matching matters, ask the user to attach the approved image too.
+
+5. TECHNICAL IMAGE REQUIREMENTS
+- Deliver a real PNG file, EXACTLY 1254 x 1254 pixels, square 1:1 aspect ratio. This is the standard size for EVERY painting, including the brown wooden frame; do not vary the canvas size between rooms.
+- Keep the PNG at or below 5 MB, because Plouf's upload limit is 5 MB.
+- The background and wooden frame are part of the painting; do not use transparency.
+- The game fits the entire image into its display area without cropping or distorting its proportions. Keep all important objects within the inner framed area and away from the edges.
+- Depict exactly the requested correct and wrong inventories. Never omit objects from the correct-answer inventory. Do not add additional prominent guessable props that confuse the theme or target count. Room architecture and incidental backdrop details are scenery, not separate inventory items.
+- Keep every object visible and distinguishable, including small supplies. No people unless the user requests them.
+- Do not print object names, answer hints, numbers, logos, watermarks or interface controls on the painting.
+
+6. COMPLETE CORRECT OBJECT LIST — MANDATORY FINAL OUTPUT
+Automatically provide the FULL list of correct object names alongside the generated painting. The user will enter these names into Plouf's Manual answer fields. Never require another request for the list.
+Show exactly one correct object name per line, as plain text. Do not add numbering, bullets, quotation marks, array notation, schema instructions, or code formatting. Do not combine multiple answers or synonyms on one line. For example:
+pencil
+notebook
+globe
+This is a format example, not a fixed inventory. The complete list itself is the deliverable; do not provide programming or file-format instructions.
+MANDATORY ANSWER SPELLING: Every answer must be lowercase, with leading/trailing spaces removed and repeated internal spaces collapsed to a single space. For French answers, use correctly spelled French words with their proper accents and ligatures, for example: fenêtre, boîte, cœur, règle, étagère. Do NOT replace French accents or ligatures with English letters in the generated list. Use Unicode NFC composition. English answers must also be lowercase. Answer language is independent of the app's EN/FR interface.
+Player matching is separate from list generation: a guess containing only English letters, digits, spaces and standard punctuation may match the accent-free stored answer (coeur → cœur, boite → boîte). A guess containing a non-ASCII character must match the stored spelling and accents exactly after lowercase, space and NFC normalization: café matches café, but cafè does not. Always generate correct French accents even though players may omit them. This is spelling normalization, NOT translation. Synonyms and translations are not equivalent automatically. Each entry is a distinct object.
+Include every correct target in the final painting, not examples or a partial sample. The number of lines must equal the requested number of correct objects. Keep all deliberate wrong objects and red-X-marked background objects OUT of the list.
+List order does not matter. Players type their guesses and press Enter; the answer list is not displayed to them in advance. Do not generate multiple-choice answer cards.
+
+7. CHECK BEFORE DELIVERING
+Inspect the generated painting against the checklist, item by item. Check the correct count, distractor count, 50/50 easy/medium split, absence of hard items, framing, image clarity, PNG format, square proportions and 5 MB maximum. If an object is missing, duplicated, ambiguous or cropped, correct the image before delivering. Do not quietly remove a requested correct answer from the correct-object list to disguise a generation omission.
+Check that the complete plain-text list has exactly the requested number of correct names, no duplicates after normalization, no omitted targets, and no distractors or background objects. Verify one name per line, lowercase spelling, no leading/trailing spaces, single internal spaces, and correct French accents and ligatures when applicable.
+
+8. DELIVERABLES
+Automatically deliver the actual finished painting.png and the COMPLETE correct object list together in the final response. Show the list directly in the chat, one lowercase name per line, ready for Manual entry into Plouf; optionally also provide the identical list as correct-objects.txt. The user must not need to request either output again. You may additionally provide room-notes.txt with the theme, difficulty breakdowns and distractor/background inventory, kept separate from the accepted-answer list.
+If the chat has access to the user's computer and the user requests Desktop output, save outside the Plouf source folder, in a new descriptive Desktop folder. Otherwise provide actual downloadable files. Do not claim to have saved local files when you cannot access that computer.
+Do not modify the Plouf application, backend or project files as part of following this guide. This guide creates room assets only.
+
+9. CURRENT APPROVED EXAMPLE — FOR REFERENCE ONLY
+Theme: classroom items (classroom equipment and supplies).
+Background: cozy sunlit empty classroom, cream walls, warm wooden floor, mint and soft pink accents, with a school desk and chair. Apply the painterly style above and an outer brown wooden frame.
+Answer language: English.
+Correct count: 20 (10 easy, 10 medium). Distractor count: 6 (3 easy, 3 medium). NO HARD ITEMS.
+Easy correct: pencil, pen, eraser, notebook, book, backpack, scissors, desk, chair, clock.
+Medium correct: ruler, pencil case, glue stick, stapler, calculator, paintbrush, crayon, globe, chalk, chalkboard.
+Easy distractors: pineapple, rubber duck, beach ball.
+Medium distractors: frying pan, snorkel, cowboy boot.
+The classroom example is not the default for every future room: ask the user for their new theme, background and counts first.
+
+10. STRICT THEME MEMBERSHIP — MANDATORY FOR IMAGE AND CORRECT OBJECT LIST
+Every correct object must clearly belong to the user's theme. Every wrong object must be clearly OUTSIDE that theme. Being physically able to put an object in the scene does not make it a member of the theme: a frying pan placed on a school desk is still not a classroom supply. Avoid ambiguous borderline items. Choose distractors as clearly identifiable objects from other categories, without making them hidden, hard to recognize or stylistically different. Apply this membership check before image generation, while inspecting the final painting, and while assembling the correct-object list. The correct-object list contains exactly the correct in-theme items and NEVER the out-of-theme distractors. Room scenery is not a target inventory.
+
+11. ITEM HISTORY AND MAXIMUM 15% REUSE — MANDATORY
+Maintain a cumulative ledger of ALL intentionally generated objects, both correct and wrong, across paintings in this conversation. A previously used correct item also counts as reused if it later appears as a distractor, and vice versa. Track conceptual identity: do not evade the limit through spelling changes, translated names, singular/plural variants, colors or synonyms (a red pencil is still a pencil).
+For a new painting containing N inventory objects in total (correct + wrong), at most floor(0.15 * N) may have appeared in ANY earlier painting in the history. At least the remainder must be new. For example, 20 correct plus 6 wrong gives N=26, so at most 3 previously used objects are allowed, not 4. This is a cap, not a target: zero reused items is fine. Do not change the theme or use hard objects just to meet the reuse cap. If the theme cannot support enough new easy/medium objects, explain and ask the user whether to broaden the theme or explicitly relax a constraint; do not silently break it.
+Before every generation, read the available history, plan the new inventory, calculate the overlap, and confirm it is within the cap. Continue enforcing 50% EASY, 50% MEDIUM and explicitly NO HARD ITEMS, plus strict in-theme versus out-of-theme membership and the brown wooden frame.
+After inspection of an accepted painting, update the cumulative history in the chat and deliver an updated used-items.txt alongside the painting, correct-objects.txt and room notes. Record the theme, the actual correct and wrong inventories, and a deduplicated cumulative list. Record actual delivered items, not objects that were only proposed or absent from the image. If a painting is replaced, update that room's record rather than treating a discarded draft as a second completed room.
+CONTEXT LIMITATION: keep using the conversation's existing history for subsequent requests in the SAME chat, but never promise permanent memory or automatic access to another chat. When this guide is imported into a NEW chat, ask the user to also attach their latest used-items.txt (or paste the ledger). If no history is available, say that the cross-chat reuse limit cannot be verified; do not invent a history or claim that past items are remembered. For a genuinely first room, start an empty history.
+History is a separate planning ledger, not the correct-answer list. Only correct object names go into the Manual answer fields. Ask for the user’s history when needed; do not assume the user has any particular Desktop files.
+
+12. FIXED PIXEL SIZE — MANDATORY
+Every final painting.png must be exactly 1254 pixels wide and 1254 pixels high. The outer brown wooden frame is included inside these dimensions, not added on top of them. Use this same size for all themes and rooms. Keep the final PNG at or below 5 MB. Check the actual saved file dimensions before delivering, not merely the requested generation size. If the image tool produces a different size, obtain a correctly sized export before claiming compliance. The current approved framed classroom painting is 1254 x 1254 pixels.
+
+13. EXCLUDE RECOGNIZABLE BACKGROUND OBJECTS WITH SMALL RED X MARKS
+Before generating, divide scene elements into (a) correct target objects, (b) deliberately chosen wrong-item distractors, and (c) incidental background objects. Every clearly recognizable incidental background object that is NOT one of the intended correct or wrong inventory objects must carry a small visible RED X. For example, if windows and curtains are scenery rather than target items, mark the window and each separate curtain with a red X. Other examples include incidental shelves, lamps, doors or plants. If the same category is an intentional target or distractor, do not classify it as incidental scenery.
+Walls and floors do NOT need red X marks. Plain ceilings and the outer brown picture frame are structural scenery and do not need marks either. Do not mark printed motifs, textures or other non-object details.
+Make each X simple and unobtrusive but legible on mobile: approximately 1.5–2% of the square image width (about 19–25 pixels at 1254 x 1254), saturated red, two clear strokes and a subtle pale edge if needed. Place it directly on the excluded background object where it will not overlap an inventory object. These marks are the explicit exception to the no-in-image-markings rule.
+NEVER put exclusion X marks on correct target objects. NEVER mark the deliberate wrong-item distractors: those must remain unmarked for the guessing challenge. A red X means 'excluded scenery, not part of the game inventory', not 'one of the wrong answers'. Keep all X-marked background objects OUT of correct-objects.txt and out of the correct/wrong difficulty counts. Identify them separately in room-notes.txt. They are not counted toward the requested correct + wrong inventory totals or the 15% inventory-reuse cap.
+Inspect the final painting for any recognizable unmarked incidental prop, and add its red X or remove that prop. Verify that no correct target or deliberate distractor was accidentally marked. Avoid excessive background props that would require too many X marks.
+For the classroom example, the window and both pink curtain panels are excluded scenery and each receives a small red X. The 20 classroom equipment/supply targets and the six unrelated distractors remain unchanged and unmarked. Use the precise theme hint 'Classroom equipment and school supplies'.
