@@ -280,7 +280,10 @@
     "v3CreateClassroom": "Create Classroom",
     "v3WorkspaceMissing": "That workspace could not be found.",
     "v3ClassroomAccess": "Enter this classroom’s Guest or Host password first.",
-    "v3ClassroomWrong": "The classroom password is incorrect."
+    "v3ClassroomWrong": "The classroom password is incorrect.",
+    "otherRoomType": "Room has other type: {type}",
+    "v3OtherClassroom": "Room created for different classroom.",
+    "v3RoomReady": "Your room is ready."
   },
   "frr": {
     "header": "un peu de compétition entre amis",
@@ -563,6 +566,9 @@
     "v3CreateClassroom": "Créer la classe",
     "v3WorkspaceMissing": "Cet espace est introuvable.",
     "v3ClassroomAccess": "Saisissez d’abord le mot de passe invité ou hôte de cette classe.",
-    "v3ClassroomWrong": "Le mot de passe de la classe est incorrect."
+    "v3ClassroomWrong": "Le mot de passe de la classe est incorrect.",
+    "otherRoomType": "La salle est d’un autre type : {type}",
+    "v3OtherClassroom": "Cette salle a été créée pour une autre classe.",
+    "v3RoomReady": "Votre salle est prête."
   }
 }

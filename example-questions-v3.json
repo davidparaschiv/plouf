@@ -1,0 +1,30 @@
+[
+  {
+    "Q": "What is the plural of “child”?",
+    "C": "Children",
+    "W1": "Childs",
+    "W2": "Childes",
+    "W3": "Childrens"
+  },
+  {
+    "Q": "Which sentence is in the past tense?",
+    "C": "She played football yesterday.",
+    "W1": "She plays football every day.",
+    "W2": "She will play football tomorrow.",
+    "W3": "She is playing football now."
+  },
+  {
+    "Q": "Which word means the opposite of “big”?",
+    "C": "Small",
+    "W1": "Tall",
+    "W2": "Long",
+    "W3": "Wide"
+  },
+  {
+    "Q": "Choose the correct sentence.",
+    "C": "There are three books on the table.",
+    "W1": "There is three books on the table.",
+    "W2": "There am three books on the table.",
+    "W3": "There be three books on the table."
+  }
+]
