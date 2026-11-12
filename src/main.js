@@ -1,4 +1,5 @@
 import "./style.css";
+import {createBallRooms} from "./pass-the-ball.js";
 import {V2_BACKGROUNDS} from './v2-assets.js';
 import {wordsReview} from './words-review.js';
 import {openPaintingGuide} from './painting-guide-dialog.js';
@@ -74,8 +75,7 @@ let roomId = new URLSearchParams(location.search).get("room") || "",
   feedback = "",
   answerRevealUntil = 0,
   guestRoom = null,
-  currentView = "loading",
-  preloadPromise;
+  currentView = "loading";
 const call = rpc;
 function toast(message) {
   const el = document.querySelector("#toast");
@@ -103,13 +103,22 @@ function clearRoom() {
 function back() {
   return `<button class="back" data-action="home">${t("back")}</button>`;
 }
-function home() {
+function roleSelection() {
   clearRoom();
-  currentView = "home";
+  currentView = "roles";
   app.innerHTML = `<section class="hero"><p class="eyebrow">${t("eyebrow")}</p><h1>${t("spark")}<br>${t("lot")} <em>Plouf.</em></h1><p class="home-description">${t("description")}</p></section><section class="roles" aria-label="${t("joiningHow")}"><button class="role" data-action="guest"><span class="symbol" aria-hidden="true"><img src="${asset("role-guest.png")}" alt=""></span><strong>${t("guest")}</strong><small>${t("guestNote")}</small><span class="arrow">↗</span></button><button class="role host" data-action="host"><span class="symbol" aria-hidden="true"><img src="${asset("role-host.png")}" alt=""></span><strong>${t("host")}</strong><small>${t("hostNote")}</small><span class="arrow">↗</span></button></section><p class="home-footer">${t("footer")}</p><p class="word-note">${t("wordNote")}</p>`;
   if (roomId)
     app.querySelector(".hero").innerHTML =
       `<p class="eyebrow">${esc(roomId)}</p><h1>${t("comeIn")}</h1><p class="muted">${t("joiningHow")}</p>`;
+}
+const ballRooms=createBallRooms({app,esc,avatar,music,setAtmosphere,onExit:home});
+function home(){
+  ballRooms.dispose();
+  roleSelection();
+  if(roomId)return;
+  currentView='home';
+  app.querySelector('.hero').classList.add('version-hero');
+  app.querySelector('.roles').outerHTML=`<section class="room-versions" aria-label="${t('v3ChooseRoom')}">${['v1','v2','v3'].map((version,i)=>`<button type="button" class="try-v2 version-card" data-action="choose-${version}"><span class="version-number">0${i+1}</span><span><strong>${t('v3Room'+(i+1))}</strong><small>${t('v3RoomNote'+(i+1))}</small></span><span class="version-arrow">↗</span></button>`).join('')}</section>`;
 }
 function characterPicker() {
   const group = guestRoom ? roomCharacters(guestRoom) : [];
@@ -128,6 +137,8 @@ function guestForm() {
 async function refreshGuestRoom(room) {
   const {data}=await call('room_info',{p_room:room});
   if(currentView!=='guest' || guestRoomCode(app.querySelector('#room').value)!==room)return null;
+  if(data.type==='v3'){roomId=room;await chooseVersion('v3');return null;}
+  if(!versionLoads.has(data.type||'v1')){const form=app.querySelector('#guest-form');await preload(data.type||'v1');currentView='guest';app.replaceChildren(form.closest('section'));}
   const changed=guestRoom?.id!==room || guestRoom?.theme!==data.theme || guestRoom?.type!==data.type;
   guestRoom={id:room,...data};roomId=room;
   if(changed){
@@ -164,9 +175,9 @@ async function findGuestRoom() {
 function hostForm(reset = true) {
   if (roomId) return unlockForm();
   currentView = "host";
-  if (reset) { questions = null; hostType = 'v1'; quizEntryState={}; itemEntryState={}; }
+  if (reset) { questions = null; quizEntryState={}; itemEntryState={}; }
   if (hostType === 'v2') { app.innerHTML = paintingHostForm(esc,back()); const form=app.querySelector('#host-v2-form');setupItemEntry(form,itemEntryState,esc);setupPaintingForm(form);return; }
-  app.innerHTML = `<section class="panel quiz-host-panel">${back()}<h2>${t("hostTitle")}</h2><p class="muted">${t("hostNoteForm")}</p><form id="host-form" class="stack"><div><span class="field-label">${t("chooseWorld")}</span><div class="themes">${themes.map((theme) => `<button type="button" data-theme="${theme.id}" class="theme ${theme.id === selectedTheme ? "selected" : ""}" aria-pressed="${theme.id === selectedTheme}"><img src="${asset(theme.id + ".png")}" alt=""><span>${t(theme.id)}</span></button>`).join("")}</div></div>${modeSwitch()}<div id="manual-quiz" class="manual-quiz stack"></div><div id="quiz-import" class="stack"><label class="upload"><span id="upload-label">${t("upload")}</span><input id="questions" type="file" accept="application/json,.json" required></label><a class="back" href="${import.meta.env.BASE_URL}example-questions${locale()==='frr'?'-fr':''}.json" download style="margin:0">${t("example")}</a><button type="button" class="back" data-action="json-guide-v1" style="margin:0">${t("jsonGuide")}</button></div><button type="button" class="back" data-action="demo" ${questions?.length ? "" : "disabled"} style="margin:0">${t("demoQuestions")}</button><div><label for="password">${t("password")}</label><input id="password" name="password" type="password" required minlength="4" placeholder="${t("passwordHint")}" autocomplete="new-password"></div><p class="error" id="form-error" hidden></p><button type="button" class="try-v2" data-action="rooms-v2">${t("tryPaintingRooms")}</button><button class="primary wide" type="submit">${t("create")}</button></form><button class="back" data-action="unlock" style="margin:20px 0 0">${t("existing")}</button></section>`;
+  app.innerHTML = `<section class="panel quiz-host-panel">${back()}<h2>${t("hostTitle")}</h2><p class="muted">${t("hostNoteForm")}</p><form id="host-form" class="stack"><div><span class="field-label">${t("chooseWorld")}</span><div class="themes">${themes.map((theme) => `<button type="button" data-theme="${theme.id}" class="theme ${theme.id === selectedTheme ? "selected" : ""}" aria-pressed="${theme.id === selectedTheme}"><img src="${asset(theme.id + ".png")}" alt=""><span>${t(theme.id)}</span></button>`).join("")}</div></div>${modeSwitch()}<div id="manual-quiz" class="manual-quiz stack"></div><div id="quiz-import" class="stack"><label class="upload"><span id="upload-label">${t("upload")}</span><input id="questions" type="file" accept="application/json,.json" required></label><a class="back" href="${import.meta.env.BASE_URL}example-questions${locale()==='frr'?'-fr':''}.json" download style="margin:0">${t("example")}</a><button type="button" class="back" data-action="json-guide-v1" style="margin:0">${t("jsonGuide")}</button></div><button type="button" class="back" data-action="demo" ${questions?.length ? "" : "disabled"} style="margin:0">${t("demoQuestions")}</button><div><label for="password">${t("password")}</label><input id="password" name="password" type="password" required minlength="4" placeholder="${t("passwordHint")}" autocomplete="new-password"></div><p class="error" id="form-error" hidden></p><button class="primary wide" type="submit">${t("create")}</button></form><button class="back" data-action="unlock" style="margin:20px 0 0">${t("existing")}</button></section>`;
   setupQuizEntry(app.querySelector('#host-form'),quizEntryState,esc,value=>{questions=value;const demo=app.querySelector('[data-action="demo"]');if(demo)demo.disabled=!questions?.length;});
 }
 
@@ -272,7 +283,9 @@ function redrawLanguage() {
     if (snapshot?.phase === 'painting') app.innerHTML = '';
     signature = "";
     renderRoom();
-  } else if (currentView === "guest") guestForm();
+  } else if (currentView === "v3") ballRooms.redraw();
+  else if (currentView === "roles") roleSelection();
+  else if (currentView === "guest") guestForm();
   else if (currentView === "host") hostForm(false);
   else if (currentView === "unlock") unlockForm();
   else if (currentView === "home") home();
@@ -312,49 +325,24 @@ async function loadImage(src) {
   await image.decode();
   return image;
 }
-async function preload() {
-  if (preloadPromise) return preloadPromise;
+const versionLoads=new Map(), decodedImages=new Map();
+const audioUrl=track=>`${import.meta.env.BASE_URL}audio/${track}-v2.mp3`;
+async function preload(type) {
+  if(versionLoads.has(type))return versionLoads.get(type);
+  currentView='loading';
   app.innerHTML = `<section class="loader"><h2>${t("loadingTitle")}</h2><div class="loader-track" role="progressbar" aria-label="${t("loading")}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="loader-fill" style="width:0%"></div></div><p>${t("loading")}</p></section>`;
-  const images = [
-    ...characters.map((character) => character.file),
-    ...themes.flatMap(({ id }) => [`${id}.png`, `${id}-mobile.png`]),
-    ...Object.values(V2_BACKGROUNDS),
-    "role-guest.png",
-    "role-host.png",
-    "medal-gold.svg",
-    "medal-silver.svg",
-    "medal-bronze.svg",
-  ];
-  const total = images.length + MUSIC_TRACKS.length;
-  let done = 0;
-  const loaded = () => {
-    const progress = Math.round((++done / total) * 100);
-    document
-      .querySelector(".loader-fill")
-      ?.style.setProperty("width", `${progress}%`);
-    document
-      .querySelector(".loader-track")
-      ?.setAttribute("aria-valuenow", progress);
-  };
-  // Keep decoded images and music in memory across room and orientation changes.
-  preloadPromise = Promise.all([
-    ...images.map((name) =>
-      loadImage(asset(name)).then((image) => {
-        loaded();
-        return image;
-      }),
-    ),
-    music.preload(
-      (track) => `${import.meta.env.BASE_URL}audio/${track}-v2.mp3`,
-      loaded,
-    ),
-  ]);
-  try {
-    return await preloadPromise;
-  } catch {
-    preloadPromise = null;
-    throw Error(t("loadError"));
-  }
+  const images=[...characters.filter(c=>type==='v1'?c.id<40:c.id>=40).map(c=>c.file),
+    ...(type==='v1'?themes.flatMap(({id})=>[`${id}.png`,`${id}-mobile.png`]):type==='v2'?Object.values(V2_BACKGROUNDS):['volleyball-v3.svg']),
+    'role-guest.png','role-host.png','medal-gold.svg','medal-silver.svg','medal-bronze.svg'];
+  const tracks=MUSIC_TRACKS.filter(track=>type==='v1'||['lobby','forest','podium'].includes(track));
+  const total=images.length+tracks.length;let done=0;
+  const loaded=()=>{const progress=Math.round(++done/total*100);document.querySelector('.loader-fill')?.style.setProperty('width',`${progress}%`);document.querySelector('.loader-track')?.setAttribute('aria-valuenow',progress);};
+  const promise=Promise.all([...images.map(async name=>{if(!decodedImages.has(name))decodedImages.set(name,await loadImage(asset(name)));loaded();}),music.preload(audioUrl,loaded,tracks)]).catch(()=>{versionLoads.delete(type);throw Error(t('loadError'));});
+  versionLoads.set(type,promise);await promise;
+}
+async function chooseVersion(type){
+  try{await preload(type);if(type==='v3'){clearRoom();currentView='v3';ballRooms.enter(roomId);}else{hostType=type;roleSelection();}}
+  catch(error){home();toast(errorText(error,'loadError'));}
 }
 async function poll() {
   clearTimeout(pollTimer);
@@ -700,6 +688,7 @@ async function submitAnswer(choice, elapsedMs) {
   }
 }
 app.addEventListener("click", async (e) => {
+  if(currentView==='v3')return;
   const elapsedMs = responseClock.elapsed();
   const character = e.target.closest("[data-character]");
   if (character) {
@@ -723,6 +712,7 @@ app.addEventListener("click", async (e) => {
   if (answer) return submitAnswer(Number(answer.dataset.answer), elapsedMs);
   const action = e.target.closest("[data-action]")?.dataset.action;
   if (!action) return;
+  if(action.startsWith('choose-')){await chooseVersion(action.slice(7));return;}
   if(action==='chatgpt-painting-guide'){openPaintingGuide({esc,audioToggle});return;}
   if (action === 'painting-guide' || action?.startsWith('json-guide-')) { openUploadGuide(action); return; }
   if (action === 'rooms-v2' || action === 'rooms-v1') {
@@ -815,6 +805,7 @@ app.addEventListener("change", async (e) => {
   }
 });
 app.addEventListener("submit", async (e) => {
+  if(currentView==='v3')return;
   e.preventDefault();
   if (e.target.id === 'guess-form') { await submitItem(e.target); return; }
   if (busy) return;
@@ -899,9 +890,11 @@ async function boot() {
       loadCharacters(`${import.meta.env.BASE_URL}characters.json`),
     ]);
     updateLanguageControls();
-    await preload();
     home();
-    music.unlock();
+    music.setTrack('lobby');
+    music.preload(audioUrl,()=>{},['lobby']).catch(()=>{});
+    if(new URLSearchParams(location.search).get('version')==='v3')await chooseVersion('v3');
+    else if(roomId){const info=await call('room_info',{p_room:roomId});await chooseVersion(info.data.type||'v1');}
   } catch (error) {
     app.innerHTML = `<section class="loader"><p class="error">${esc(errorText(error,"loadError"))}</p><button class="primary" id="retry">${t("retry")}</button></section>`;
     document.querySelector("#retry").onclick = () => location.reload();

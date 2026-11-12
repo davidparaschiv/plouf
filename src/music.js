@@ -38,6 +38,7 @@ export class RoomMusic {
     this.enabled = true;
     this.track = null;
     this.buffers = new Map();
+    this.loading = new Map();
     this.source = null;
     this.unlocked = false;
   }
@@ -51,17 +52,18 @@ export class RoomMusic {
     }
   }
 
-  async preload(audioUrl, onLoaded = () => {}) {
+  async preload(audioUrl, onLoaded = () => {}, tracks = MUSIC_TRACKS) {
     this.initialize();
     await Promise.all(
-      MUSIC_TRACKS.map(async (track) => {
+      tracks.map(async (track) => {
         if (!this.buffers.has(track)) {
-          const response = await this.fetchAudio(audioUrl(track));
-          if (!response.ok) throw Error(`Music could not load: ${track}`);
-          const decoded = await this.context.decodeAudioData(
-            await response.arrayBuffer(),
-          );
-          this.buffers.set(track, withRepeatGap(this.context, decoded));
+          if (!this.loading.has(track)) this.loading.set(track, (async()=>{
+            const response = await this.fetchAudio(audioUrl(track));
+            if (!response.ok) throw Error(`Music could not load: ${track}`);
+            const decoded = await this.context.decodeAudioData(await response.arrayBuffer());
+            this.buffers.set(track, withRepeatGap(this.context, decoded));
+          })().finally(()=>this.loading.delete(track)));
+          await this.loading.get(track);
         }
         onLoaded();
       }),

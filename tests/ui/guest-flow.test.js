@@ -53,9 +53,10 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
  const submit=selector=>d.querySelector(selector).dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
  try{
   w.eval(code);
-  await waitFor(()=>d.querySelector('[data-action=guest]'));
-  for(const c of catalog.plush)assert.ok(loadedImages.some(url=>url.endsWith(c.file)));
-  assert.ok(loadedImages.some(url=>url.includes('v2-background')));
+  await waitFor(()=>d.querySelector('[data-action=choose-v1]'));
+  click('[data-action=choose-v1]');await waitFor(()=>d.querySelector('[data-action=host]'));
+  for(const c of catalog.plush)assert.ok(!loadedImages.some(url=>url.endsWith(c.file)));
+  assert.ok(!loadedImages.some(url=>url.includes('v2-background')));
   click('[data-action=host]');
   click('[data-language=frr]');
   assert.equal(d.querySelector('h2').textContent,languages.frr.hostTitle);
@@ -67,8 +68,10 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
   assert.ok(d.querySelector('.upload-guide pre').textContent.includes('Bonne réponse'));
   d.querySelector('.upload-guide .back').click();
   assert.ok(d.querySelector('#quiz-import a').href.endsWith('example-questions-fr.json'));
-  click('[data-language=en]');click('[data-action=rooms-v2]');
+  click('[data-language=en]');click('[data-action=home]');click('[data-action=choose-v2]');await waitFor(()=>d.querySelector('[data-action=host]'));click('[data-action=host]');
   await waitFor(()=>d.querySelector('#host-v2-form').presetData);
+  for(const c of catalog.plush)assert.ok(loadedImages.some(url=>url.endsWith(c.file)));
+  assert.ok(loadedImages.some(url=>url.includes('v2-background')));
   click('[data-action=demo-v2]');
   await waitFor(()=>d.querySelector('.painting-demo [data-finish]'));
   assert.ok(d.querySelector('.painting-demo [data-finish]').classList.contains('primary'));
@@ -129,7 +132,7 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
   assert.equal(d.querySelector('.logo').getAttribute('aria-label'),'Accueil Plouf');
   click('[data-language=en]');
   click('[data-action=home]');
-  click('[data-action=guest]');
+  click('[data-action=choose-v2]');await waitFor(()=>d.querySelector('[data-action=host]'));click('[data-action=guest]');
   const guestPIDMarkup=d.querySelector('.room-number-input').outerHTML;
   assert.equal(d.querySelector('#guest-form [type=submit]').disabled,false);
   const room=d.querySelector('#room');room.value='PID-10020';room.dispatchEvent(new w.Event('input',{bubbles:true}));assert.equal(room.value,'10020');
@@ -174,7 +177,7 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
   assert.ok(d.body.classList.contains('v2-results'));
   assert.ok(d.querySelector('.podium-floor').compareDocumentPosition(d.querySelector('.words-review'))&w.Node.DOCUMENT_POSITION_FOLLOWING);
   click('[data-language=frr]');assert.equal(d.querySelector('.words-review h2').textContent,'Mots');
-  click('[data-action=home]');click('[data-action=host]');click('[data-action=unlock]');
+  click('[data-action=home]');click('[data-action=choose-v1]');await waitFor(()=>d.querySelector('[data-action=host]'));click('[data-action=host]');click('[data-action=unlock]');
   assert.equal(d.querySelector('.room-number-input').outerHTML,guestPIDMarkup);
   const hostRoom=d.querySelector('#room');
   assert.equal(hostRoom.type,'text');assert.equal(hostRoom.inputMode,'numeric');assert.equal(hostRoom.pattern,'[0-9]*');

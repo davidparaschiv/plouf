@@ -126,3 +126,14 @@ test('an interaction before preloading unlocks audio and playback starts when re
   assert.equal(starts, 1);
   assert.equal(music.enabled, true);
 });
+
+test('room-specific music loading fetches only requested tracks and deduplicates overlapping loads',async()=>{
+ const fetched=[];
+ const context={state:'suspended',destination:{},createBuffer:buffer,createGain:()=>({gain:{value:0},connect(){}}),decodeAudioData:async()=>buffer()};
+ const music=new RoomMusic({createContext:()=>context,fetchAudio:async track=>{fetched.push(track);return {ok:true,arrayBuffer:async()=>new ArrayBuffer(0)};}});
+ await Promise.all([music.preload(t=>t,()=>{},['lobby']),music.preload(t=>t,()=>{},['lobby','forest','podium'])]);
+ assert.deepEqual(fetched.sort(),['forest','lobby','podium']);
+ assert.equal(music.buffers.has('jungle'),false);
+ await music.preload(t=>t);
+ assert.equal(fetched.length,MUSIC_TRACKS.length);
+});

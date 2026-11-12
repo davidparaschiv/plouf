@@ -1,0 +1,55 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {build} from 'vite';
+import {JSDOM} from 'jsdom';
+
+test('V3 first-screen selection, workspace login, host creation, passing and classroom podium',async()=>{
+ const result=await build({configFile:false,logLevel:'silent',plugins:[{name:'ui-test-services',enforce:'pre',load(id){
+  if(id.endsWith('/src/api.js'))return `export const rpc=(...args)=>window.testServer.rpc(...args);export const connect=async()=>({});`;
+  if(id.endsWith('/src/effects.js'))return `export const setAtmosphere=()=>{};export const reward=()=>{};export const itemReward=()=>{};`;
+  if(id.endsWith('/src/music.js'))return `export const MUSIC_TRACKS=[];export class RoomMusic{constructor(){this.enabled=true}preload(){return Promise.resolve()}unlock(){}setTrack(value){this.track=value}toggle(){return this.enabled=!this.enabled}}`;
+ }}],build:{write:false,minify:false,rollupOptions:{input:'src/main.js',output:{format:'iife',inlineDynamicImports:true}}}});
+ const dom=new JSDOM(await readFile('index.html','utf8'),{url:'https://plouf.space/',runScripts:'outside-only',pretendToBeVisual:true});
+ const w=dom.window,d=w.document;
+ const languages=JSON.parse(await readFile('public/lang.json','utf8')),catalog=JSON.parse(await readFile('public/characters.json','utf8'));
+ w.scrollTo=()=>{};w.matchMedia=()=>({matches:true});w.Image=class{set src(v){this._src=v}decode(){return Promise.resolve()}};
+ w.fetch=async url=>({ok:true,json:async()=>String(url).includes('characters.json')?catalog:languages});
+ const timeout=w.setTimeout.bind(w);w.setTimeout=(fn,ms,...args)=>timeout(fn,ms===500?20:ms,...args);
+ const people=Array.from({length:30},(_,i)=>({id:'p'+i,name:'Player '+i,character:40+i%6}));
+ let snapshot={id:'PID-10020',type:'v3',phase:'waiting',host:true,started:false,playing:false,member_id:null,holder:null,session_id:'session',turn_id:'turn',event_id:'waiting',event:'waiting',score:0,best_score:100,classroom:'Class A',members:people,question_index:0,question_count:2};
+ const calls=[];
+ w.testServer={async rpc(name,args){calls.push([name,args]);
+  if(name==='access_workspace_v3'){assert.equal(args.p_name,'School');if(args.p_create){assert.equal(args.p_guest_password,'guest-secret');assert.equal(args.p_host_password,'secret');return {data:{id:'workspace',name:'School',role:'host'}};}assert.ok(['secret','guest-secret'].includes(args.p_password));return {data:{id:'workspace',name:'School',role:args.p_password==='secret'?'host':'guest'}};}
+  if(name==='workspace_options_v3')return {data:{classrooms:[{id:'class',name:'Class A'}],presets:[{id:'preset',name:'Quiz A'}]}};
+  if(name==='create_room_v3'){assert.equal(args.p_preset,'preset');assert.equal(args.p_classroom,'class');assert.equal('p_password' in args,false);return {data:'PID-10020'};}
+  if(name==='snapshot_v3')return {data:structuredClone(snapshot),offset:0};
+  if(name==='control_room_v3'){if(args.p_action==='start')snapshot={...snapshot,started:true,phase:'waiting',event_id:'start'};if(args.p_action==='play')snapshot={...snapshot,playing:true,phase:'question',holder:'p0',turn_id:'turn1',event_id:'question',event:'random',question:'A question?',answers:['C','A','B','D'],answer_colors:[2,0,3,1],correct_choice:0,deadline:new Date(Date.now()+20000).toISOString()};if(args.p_action==='finish')snapshot={...snapshot,started:false,playing:false,phase:'finished',event_id:'finish',ranking:[{id:'class',name:'Class A',points:500},{id:'class2',name:'Class B',points:300},{id:'class3',name:'Class C',points:100},{id:'class4',name:'Class D',points:0}]};return {data:null};}
+  if(name==='pass_ball_v3'){assert.equal(args.p_target,'p2');snapshot={...snapshot,phase:'question',holder:'p2',question:'Next question',event_id:'pass',turn_id:'turn2',event:'received',answers:['1','2','3','4']};return {data:null};}
+  if(name==='join_room_v3')return {data:'p0'};
+  throw Error('Unexpected '+name);
+ }};
+ const wait=async fn=>{const end=Date.now()+5000;while(!fn()){if(Date.now()>end)throw Error('Timed out: '+d.querySelector('#app').textContent);await new Promise(r=>setTimeout(r,10));}};
+ const click=s=>{assert.ok(d.querySelector(s),s);d.querySelector(s).click();};
+ const submit=s=>d.querySelector(s).dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
+ try{
+  w.eval(result.output.find(o=>o.type==='chunk'&&o.isEntry).code);
+  await wait(()=>d.querySelector('[data-action=choose-v3]'));assert.equal(d.querySelectorAll('.version-card').length,3);
+  click('[data-action=choose-v3]');await wait(()=>d.querySelector('[data-v3-form=workspace]'));
+  click('[data-v3=create-workspace]');assert.equal(d.querySelectorAll('input[type=password]').length,2);d.querySelector('[name=workspace]').value='School';d.querySelector('[name=guestPassword]').value='guest-secret';d.querySelector('[name=hostPassword]').value='secret';submit('form');
+  await wait(()=>d.querySelector('[data-v3-form=create]'));assert.equal(d.querySelector('[data-v3=host]'),null);assert.equal(d.querySelector('[data-v3=guest]'),null);
+  assert.equal(d.querySelector('[data-new-preset]').hidden,true);assert.equal(d.querySelector('[data-new-classroom]').hidden,true);
+  assert.equal(d.querySelector('[name=quiz]').required,false);assert.equal(d.querySelector('[name=password]'),null);submit('form');
+  await wait(()=>d.querySelector('[data-v3=start]'));assert.equal(d.querySelectorAll('.v3-player').length,30);assert.equal(d.querySelectorAll('.v3-player span').length,0);
+  const coords=[...d.querySelectorAll('.v3-player')].map(el=>el.style.left+el.style.top);assert.equal(new Set(coords).size,30);
+  click('[data-v3=start]');await wait(()=>d.querySelector('[data-v3=play]'));click('[data-v3=play]');await wait(()=>d.querySelector('.v3-question h2'));
+  assert.equal(d.querySelector('.v3-question h2').textContent,'A question?');assert.deepEqual([...d.querySelectorAll('[data-v3-answer]')].map(b=>b.dataset.v3Color),['2','0','3','1']);assert.equal(d.querySelectorAll('[data-v3-answer]:disabled').length,4);assert.equal(d.querySelectorAll('.v3-player span').length,30);assert.match(d.querySelector('.v3-timer').textContent,/^\d+ s$/);
+  click('[data-language=frr]');assert.match(d.querySelector('.v3-announcement').textContent,/MAINTENANT/);assert.match(d.querySelector('.v3-announcement').textContent,/hasard/);
+  click('[data-v3=finish]');await wait(()=>d.querySelector('.v3-podium'));assert.equal(d.querySelectorAll('.v3-podium-place').length,3);assert.equal(d.querySelectorAll('.v3-ranking>div').length,4);assert.equal(d.querySelector('.place-1 h2').textContent,'Class A');
+  // Guest sees targets only when they hold the ball and have answered correctly.
+  click('[data-v3=roles]');await wait(()=>d.querySelector('[data-v3-form=create]'));click('[data-v3=back]');d.querySelector('[name=workspace]').value='School';d.querySelector('[name=password]').value='guest-secret';submit('form');await wait(()=>d.querySelector('[data-v3-form=join]'));d.querySelector('[name=room]').value='10020';d.querySelector('[name=name]').value='Player 0';
+  snapshot={...snapshot,host:false,member_id:'p0',phase:'passing',started:true,playing:true,holder:'p0',event_id:'correct',event:'correct',score:100};submit('form');
+  await wait(()=>d.querySelector('[data-v3-target=p2]:not(:disabled)'));assert.equal(d.querySelector('[data-v3-target=p0]').disabled,true);click('[data-v3-target=p2]');
+  await wait(()=>calls.some(([name])=>name==='pass_ball_v3'));await wait(()=>d.querySelector('.has-ball')?.dataset.v3Target==='p2');
+ }finally{dom.window.close();}
+});
