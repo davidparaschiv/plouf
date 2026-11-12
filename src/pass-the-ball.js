@@ -163,7 +163,9 @@ export function createBallRooms({app,esc,avatar,music,setAtmosphere,onExit}) {
    clearTimeout(timer);epoch++;await loadRoom();
   }catch(error){showError(error);signature='';}finally{pending=false;}
  });
- window.addEventListener('resize',()=>{if(page==='room'&&state){positions.clear();signature='';render(true);}});
+ // Mobile address bars change viewport height while scrolling. Preserve every player's slot.
+ let viewportWidth=window.innerWidth;
+ window.addEventListener('resize',()=>{const width=window.innerWidth;if(width===viewportWidth)return;viewportWidth=width;if(page==='room'&&state){signature='';render(true);}});
  return {enter,dispose,redraw(){const values=[...app.querySelectorAll('[data-v3-form] input,[data-v3-form] select')].filter(e=>e.type!=='file').map(e=>[e.name,e.value]);draw();for(const [name,value]of values){const field=app.querySelector(`[name="${name}"]`);if(field)field.value=value;}syncForm();}};
 }
 export function secureIndex(length){const limit=Math.floor(4294967296/length)*length;let n;do{n=crypto.getRandomValues(new Uint32Array(1))[0];}while(n>=limit);return n%length;}
