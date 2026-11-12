@@ -1,3 +1,6 @@
+import io
+import json
+from urllib.error import HTTPError
 import importlib.util
 import os
 from pathlib import Path
@@ -56,6 +59,29 @@ class SyncTests(unittest.TestCase):
                 with self.assertRaises(RuntimeError):
                     module.sync_migrations(REF, 'test-token', root)
                 self.assertEqual(request.call_count, 2)
+
+    def test_http_error_reports_database_reason_without_credentials_or_sql(self):
+        token = 'sbp_PRIVATE_TOKEN'
+        body = {'code': '42703', 'message': 'Failed to run sql query: ERROR: column "host_password_hash" does not exist\nQUERY: SELECT secret FROM private.table; ' + token}
+        error = HTTPError('https://api.supabase.com', 400, 'Bad Request', {}, io.BytesIO(json.dumps(body).encode()))
+        with patch.object(module, 'urlopen', side_effect=error):
+            with self.assertRaises(RuntimeError) as result:
+                module.management_request(REF, token, 'POST', {'query': 'private migration SQL'})
+        message = str(result.exception)
+        self.assertIn('SQLSTATE 42703', message)
+        self.assertIn('host_password_hash', message)
+        self.assertNotIn(token, message)
+        self.assertNotIn('SELECT', message)
+        self.assertNotIn('private migration SQL', message)
+
+    def test_error_detail_redacts_literals_and_tokens_and_handles_non_json(self):
+        body = {'message': "ERROR: invalid value 'secret password' for sbp_PRIVATE"}
+        error = HTTPError('https://api.supabase.com', 400, 'Bad Request', {}, io.BytesIO(json.dumps(body).encode()))
+        detail = module.migration_error_detail(error, 'sbp_PRIVATE')
+        self.assertNotIn('secret password', detail)
+        self.assertNotIn('sbp_PRIVATE', detail)
+        error = HTTPError('https://api.supabase.com', 400, 'Bad Request', {}, io.BytesIO(b'<html>private stuff</html>'))
+        self.assertEqual(module.migration_error_detail(error, 'token'), '')
 
     def test_dry_run_does_not_read_token_contact_supabase_or_run_commands(self):
         with patch('sys.argv', ['sync_supabase.py', '--project-ref', REF, '--dry-run']), \

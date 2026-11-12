@@ -64,6 +64,35 @@ def migration_files(root=ROOT):
     return result
 
 
+def migration_error_detail(error, token):
+    """Show one diagnostic line, excluding SQL context, literals and credentials."""
+    try:
+        body = json.loads(error.read(65536).decode('utf-8', errors='replace'))
+    except (ValueError, OSError):
+        return ''
+    if not isinstance(body, dict):
+        return ''
+    message = body.get('message') or body.get('error')
+    if isinstance(message, dict):
+        message = message.get('message')
+    if not isinstance(message, str):
+        return ''
+    # Database responses can append the complete SQL and its context. Never emit it.
+    message = re.sub(r'^\s*Failed to run sql query:\s*', '', message, flags=re.IGNORECASE)
+    message = re.split(r'\b(?:QUERY|CONTEXT|STATEMENT|DETAIL|HINT):', message.strip())[0]
+    message = message.splitlines()[0].strip() if message.splitlines() else ''
+    message = message.replace(token, '[redacted]') if token else message
+    message = re.sub(r"'(?:''|[^'])*'", "'[redacted]'", message)
+    message = re.sub(r'\b(?:sbp_|sb_secret_|sb_publishable_)[A-Za-z0-9_-]+', '[redacted]', message)
+    message = re.sub(r'\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)?', '[redacted]', message)
+    # Reject an unexpected response containing SQL source instead of a diagnostic.
+    if re.search(r'(?i)^\s*(?:create|alter|drop|insert|update|delete|select|grant|revoke|begin)\s+(?:table|function|schema|into|from|private\.|public\.)', message):
+        return ''
+    code = body.get('code', '')
+    state = f' SQLSTATE {code}.' if isinstance(code, str) and re.fullmatch(r'[0-9A-Z]{5}', code) else ''
+    return f'{state} {message[:600]}' if message else state
+
+
 def management_request(project_ref, token, method, payload=None, idempotency_key=None):
     url = f'https://api.supabase.com/v1/projects/{project_ref}/database/migrations'
     headers = {'Authorization': f'Bearer {token}', 'Accept': 'application/json'}
@@ -79,12 +108,13 @@ def management_request(project_ref, token, method, payload=None, idempotency_key
             data = response.read()
             return json.loads(data) if data else None
     except HTTPError as error:
-        # Do not print request headers, tokens, or SQL from server error bodies.
+        # Print only a sanitized diagnostic; never headers, credentials or SQL.
         hint = {401: 'Check the personal access token.',
                 403: 'Check the token permissions for this project.',
                 429: 'Rate limit reached; wait before trying again.'}.get(
                     error.code, 'Check the migration and project logs before retrying.')
-        raise RuntimeError(f'Migration API returned HTTP {error.code}. {hint}') from None
+        detail = migration_error_detail(error, token)
+        raise RuntimeError(f'Migration API returned HTTP {error.code}.{detail} {hint}') from None
     except (URLError, TimeoutError):
         raise RuntimeError(
             'The migration request could not complete. Check the remote migration '
