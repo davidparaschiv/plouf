@@ -137,8 +137,7 @@ function guestForm() {
 async function refreshGuestRoom(room) {
   const {data}=await call('room_info',{p_room:room});
   if(currentView!=='guest' || guestRoomCode(app.querySelector('#room').value)!==room)return null;
-  if(data.type==='v3'){roomId=room;await chooseVersion('v3');return null;}
-  if(!versionLoads.has(data.type||'v1')){const form=app.querySelector('#guest-form');await preload(data.type||'v1');currentView='guest';app.replaceChildren(form.closest('section'));}
+  if((data.type||'v1')!==hostType)throw Error(`Room has other type: ${(data.type||'v1').toUpperCase()}`);
   const changed=guestRoom?.id!==room || guestRoom?.theme!==data.theme || guestRoom?.type!==data.type;
   guestRoom={id:room,...data};roomId=room;
   if(changed){
@@ -176,7 +175,7 @@ function hostForm(reset = true) {
   if (roomId) return unlockForm();
   currentView = "host";
   if (reset) { questions = null; quizEntryState={}; itemEntryState={}; }
-  if (hostType === 'v2') { app.innerHTML = paintingHostForm(esc,back()); const form=app.querySelector('#host-v2-form');setupItemEntry(form,itemEntryState,esc);setupPaintingForm(form);return; }
+  if (hostType === 'v2') { app.innerHTML = paintingHostForm(esc,back());app.querySelector('.panel').insertAdjacentHTML('beforeend',`<button class="back" data-action="unlock" style="margin:20px 0 0">${t('existing')}</button>`); const form=app.querySelector('#host-v2-form');setupItemEntry(form,itemEntryState,esc);setupPaintingForm(form);return; }
   app.innerHTML = `<section class="panel quiz-host-panel">${back()}<h2>${t("hostTitle")}</h2><p class="muted">${t("hostNoteForm")}</p><form id="host-form" class="stack"><div><span class="field-label">${t("chooseWorld")}</span><div class="themes">${themes.map((theme) => `<button type="button" data-theme="${theme.id}" class="theme ${theme.id === selectedTheme ? "selected" : ""}" aria-pressed="${theme.id === selectedTheme}"><img src="${asset(theme.id + ".png")}" alt=""><span>${t(theme.id)}</span></button>`).join("")}</div></div>${modeSwitch()}<div id="manual-quiz" class="manual-quiz stack"></div><div id="quiz-import" class="stack"><label class="upload"><span id="upload-label">${t("upload")}</span><input id="questions" type="file" accept="application/json,.json" required></label><a class="back" href="${import.meta.env.BASE_URL}example-questions${locale()==='frr'?'-fr':''}.json" download style="margin:0">${t("example")}</a><button type="button" class="back" data-action="json-guide-v1" style="margin:0">${t("jsonGuide")}</button></div><button type="button" class="back" data-action="demo" ${questions?.length ? "" : "disabled"} style="margin:0">${t("demoQuestions")}</button><div><label for="password">${t("password")}</label><input id="password" name="password" type="password" required minlength="4" placeholder="${t("passwordHint")}" autocomplete="new-password"></div><p class="error" id="form-error" hidden></p><button class="primary wide" type="submit">${t("create")}</button></form><button class="back" data-action="unlock" style="margin:20px 0 0">${t("existing")}</button></section>`;
   setupQuizEntry(app.querySelector('#host-form'),quizEntryState,esc,value=>{questions=value;const demo=app.querySelector('[data-action="demo"]');if(demo)demo.disabled=!questions?.length;});
 }
@@ -848,6 +847,8 @@ app.addEventListener("submit", async (e) => {
       });
     } else {
       roomId = guestRoomCode(fields.get("room"));
+      const info=(await call('room_info',{p_room:roomId})).data;
+      if((info.type||'v1')!==hostType)throw Error(`Room has other type: ${(info.type||'v1').toUpperCase()}`);
       await call("unlock_host", {
         p_room: roomId,
         p_password: fields.get("password"),

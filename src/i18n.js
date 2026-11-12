@@ -38,6 +38,8 @@ export function translatedRank(number) {
 }
 export function errorText(error, fallbackKey="genericError") {
   const message = error?.message ?? String(error);
+  const otherType=/^Room has other type: (V[123])$/i.exec(message);
+  if(otherType)return t('otherRoomType',{type:otherType[1].toUpperCase()});
   const exact = {
     "Invalid answer.": "invalidAnswer",
     "Invalid response time.": "invalidResponseTime",

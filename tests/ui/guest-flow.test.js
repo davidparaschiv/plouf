@@ -22,7 +22,7 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
  const dom=new JSDOM(html,{url:'https://plouf.space/',runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window,d=w.document;
  const loadedImages=[];
- const state={open:false,phase:'waiting',meDone:false,otherDone:false,infoCalls:0,joins:0,unlocks:0};
+ const state={open:false,phase:'waiting',meDone:false,otherDone:false,infoCalls:0,joins:0,unlocks:0,type:'v2'};
  const me={id:'alice',name:'Alice',character:40,points:500,rank:1};
  const bob={id:'bob',name:'Bob',character:41,points:500,rank:2};
  w.scrollTo=()=>{};
@@ -39,7 +39,7 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
   if(name==='painting_presets')return {data:[{id:'french',description:'Private Preset Name',quiz_language:'fr'},{id:'english',description:'Garden Objects',quiz_language:'en'}]};
   if(name==='painting_preset')return {data:{id:args.p_id,description:'Private Preset Name',quiz_language:'fr',image_path:'painting.png',items:['cœur','une fenêtre'],duration_seconds:120,object_theme:'Classroom Items'}};
   if(name==='unlock_host'){assert.equal(args.p_room,'PID-10020');assert.equal(args.p_password,'host-pass');state.unlocks++;return {data:null};}
-  if(name==='room_info'){state.infoCalls++;assert.equal(args.p_room,'PID-10020');return {data:{theme:'forest',type:'v2',can_join:state.open}};}
+  if(name==='room_info'){state.infoCalls++;assert.equal(args.p_room,'PID-10020');return {data:{theme:'forest',type:state.type,can_join:state.open}};}
   if(name==='join_room'){assert.equal(state.open,true);assert.equal(args.p_character,41);state.joins++;return {data:null};}
   if(name==='submit_item'){assert.equal(args.p_guess,'book');state.meDone=true;return {data:{correct:true,duplicate:false,points:500}};}
   if(name==='room_snapshot'){
@@ -137,7 +137,8 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
   assert.equal(d.querySelector('#guest-form [type=submit]').disabled,false);
   const room=d.querySelector('#room');room.value='PID-10020';room.dispatchEvent(new w.Event('input',{bubbles:true}));assert.equal(room.value,'10020');
   d.querySelector('#name').value='Alice';
-  click('[data-action=find-room]');await waitFor(()=>d.querySelector('#form-error').hidden===false);
+  state.type='v1';click('[data-action=find-room]');await waitFor(()=>d.querySelector('#form-error').textContent==='Room has other type: V1');assert.equal(state.joins,0);state.infoCalls=0;state.type='v2';
+  click('[data-action=find-room]');await waitFor(()=>d.querySelector('#form-error').textContent===languages.en.notOpen);
   const join=d.querySelector('#guest-form [type=submit]');assert.equal(join.disabled,false);
   assert.equal(d.querySelector('#form-error').textContent,languages.en.notOpen);
   assert.equal(d.querySelectorAll('.plush-characters .character').length,6);
@@ -177,7 +178,7 @@ test('guest can retry Join after a closed room opens, then sees the podium when 
   assert.ok(d.body.classList.contains('v2-results'));
   assert.ok(d.querySelector('.podium-floor').compareDocumentPosition(d.querySelector('.words-review'))&w.Node.DOCUMENT_POSITION_FOLLOWING);
   click('[data-language=frr]');assert.equal(d.querySelector('.words-review h2').textContent,'Mots');
-  click('[data-action=home]');click('[data-action=choose-v1]');await waitFor(()=>d.querySelector('[data-action=host]'));click('[data-action=host]');click('[data-action=unlock]');
+  click('[data-action=home]');click('[data-action=choose-v2]');await waitFor(()=>d.querySelector('[data-action=host]'));click('[data-action=host]');click('[data-action=unlock]');
   assert.equal(d.querySelector('.room-number-input').outerHTML,guestPIDMarkup);
   const hostRoom=d.querySelector('#room');
   assert.equal(hostRoom.type,'text');assert.equal(hostRoom.inputMode,'numeric');assert.equal(hostRoom.pattern,'[0-9]*');
