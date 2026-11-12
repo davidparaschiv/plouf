@@ -111,7 +111,7 @@ function roleSelection() {
     app.querySelector(".hero").innerHTML =
       `<p class="eyebrow">${esc(roomId)}</p><h1>${t("comeIn")}</h1><p class="muted">${t("joiningHow")}</p>`;
 }
-const ballRooms=createBallRooms({app,esc,avatar,music,setAtmosphere,onExit:home});
+const ballRooms=createBallRooms({app,esc,avatar,music,setAtmosphere,onExit:()=>{roomId='';history.replaceState(null,'',location.pathname);home();}});
 function home(){
   ballRooms.dispose();
   roleSelection();

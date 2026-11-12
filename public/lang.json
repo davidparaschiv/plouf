@@ -274,7 +274,13 @@
     "v3GuestPassword": "Guest password",
     "v3HostPassword": "Host password",
     "v3DifferentPasswords": "Use different passwords for guests and hosts.",
-    "v3CurrentScore": "Current game score"
+    "v3CurrentScore": "Current game score",
+    "v3Empty": "Empty",
+    "v3ClassroomPassword": "Classroom password",
+    "v3CreateClassroom": "Create Classroom",
+    "v3WorkspaceMissing": "That workspace could not be found.",
+    "v3ClassroomAccess": "Enter this classroom’s Guest or Host password first.",
+    "v3ClassroomWrong": "The classroom password is incorrect."
   },
   "frr": {
     "header": "un peu de compétition entre amis",
@@ -551,6 +557,12 @@
     "v3GuestPassword": "Mot de passe invité",
     "v3HostPassword": "Mot de passe hôte",
     "v3DifferentPasswords": "Choisissez des mots de passe différents pour les invités et les hôtes.",
-    "v3CurrentScore": "Score de cette partie"
+    "v3CurrentScore": "Score de cette partie",
+    "v3Empty": "Vide",
+    "v3ClassroomPassword": "Mot de passe de la classe",
+    "v3CreateClassroom": "Créer la classe",
+    "v3WorkspaceMissing": "Cet espace est introuvable.",
+    "v3ClassroomAccess": "Saisissez d’abord le mot de passe invité ou hôte de cette classe.",
+    "v3ClassroomWrong": "Le mot de passe de la classe est incorrect."
   }
 }
