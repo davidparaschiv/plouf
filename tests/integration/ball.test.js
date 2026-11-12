@@ -28,6 +28,10 @@ test('V3 workspace isolation, ball ownership, resets, classroom records and fina
  await assert.rejects(rpc('access_workspace_v3',['Bad',null,true,'same','same']),/different/);
  await assert.rejects(rpc('access_workspace_v3',[' école a ',null,true,'guest-secret','host-secret']),/already used/);
  await assert.rejects(rpc('access_workspace_v3',['École A','wrong',false]),/incorrect/);
+ const sharedPrefix='a'.repeat(80);
+ await rpc('access_workspace_v3',['Long passwords',null,true,sharedPrefix+'guest',sharedPrefix+'host']);
+ assert.equal((await rpc('access_workspace_v3',['Long passwords',sharedPrefix+'guest',false])).role,'guest');
+ assert.equal((await rpc('access_workspace_v3',['Long passwords',sharedPrefix+'host',false])).role,'host');
  const qs=JSON.stringify([{Q:'Un cœur ?',C:'Oui',W1:'Non',W2:'Peut-être',W3:'Jamais'},{Q:'Second question',C:'Correct',W1:'One',W2:'Two',W3:'Three'}]);
  const room=await rpc('create_room_v3',[w.id,null,'Classe A',null,'Quiz A',qs]);
  let opts=await rpc('workspace_options_v3',[w.id]);

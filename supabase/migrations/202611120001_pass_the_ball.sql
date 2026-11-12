@@ -33,14 +33,14 @@ begin
   if p_guest_password is null or p_host_password is null or length(trim(p_guest_password))<4 or length(trim(p_host_password))<4 then raise exception 'Use at least four password characters.'; end if;
   if p_guest_password=p_host_password then raise exception 'Use different Guest and Host passwords.'; end if;
   begin
-   insert into private.workspace_v3(name,guest_password_hash,host_password_hash) values(trim(p_name),extensions.crypt(p_guest_password,extensions.gen_salt('bf')),extensions.crypt(p_host_password,extensions.gen_salt('bf'))) returning * into w;
+   insert into private.workspace_v3(name,guest_password_hash,host_password_hash) values(trim(p_name),extensions.crypt(encode(extensions.digest(p_guest_password,'sha256'),'hex'),extensions.gen_salt('bf')),extensions.crypt(encode(extensions.digest(p_host_password,'sha256'),'hex'),extensions.gen_salt('bf'))) returning * into w;
   exception when unique_violation then raise exception 'This workspace name is already used.'; end;
   access_role:='host';
  else
   select * into w from private.workspace_v3 where lower(trim(name))=lower(trim(p_name));
   if w.id is null or p_password is null then raise exception 'Workspace or password is incorrect.'; end if;
-  if w.host_password_hash=extensions.crypt(p_password,w.host_password_hash) then access_role:='host';
-  elsif w.guest_password_hash=extensions.crypt(p_password,w.guest_password_hash) then access_role:='guest';
+  if w.host_password_hash=extensions.crypt(encode(extensions.digest(p_password,'sha256'),'hex'),w.host_password_hash) then access_role:='host';
+  elsif w.guest_password_hash=extensions.crypt(encode(extensions.digest(p_password,'sha256'),'hex'),w.guest_password_hash) then access_role:='guest';
   else raise exception 'Workspace or password is incorrect.'; end if;
  end if;
  insert into private.workspace_access_v3 values(w.id,auth.uid(),access_role) on conflict(workspace_id,user_id) do update set role=excluded.role;
