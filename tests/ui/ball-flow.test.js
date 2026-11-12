@@ -19,7 +19,7 @@ test('V3 first-screen selection, workspace login, host creation, passing and cla
  const people=Array.from({length:30},(_,i)=>({id:'p'+i,name:'Player '+i,character:40+i%6}));
  let snapshot={id:'PID-10020',type:'v3',phase:'waiting',host:true,started:false,playing:false,member_id:null,holder:null,session_id:'session',turn_id:'turn',event_id:'waiting',event:'waiting',score:0,best_score:100,classroom:'Class A',members:people,question_index:0,question_count:2};
  const calls=[];let workspacesExist=false,lookupType='v3',sameClass=true;
- w.testServer={async rpc(name,args){calls.push([name,args]);if(name==='list_workspaces_v3')return {data:workspacesExist?[{id:'workspace',name:'School'}]:[]};
+ w.testServer={async rpc(name,args,identity){calls.push([name,args,identity]);if(['join_classroom_v3','find_room_v3','join_room_v3','pass_ball_v3'].includes(name))assert.equal(identity,'v3-guest');if(['access_workspace_v3','create_room_v3','control_room_v3'].includes(name))assert.equal(identity,'default');if(name==='list_workspaces_v3')return {data:workspacesExist?[{id:'workspace',name:'School'}]:[]};
   if(name==='access_workspace_v3'){assert.equal(args.p_name,'School');assert.equal(args.p_password,'secret');workspacesExist=true;return {data:{id:'workspace',name:'School'}};}
   if(name==='list_classrooms_v3'){assert.equal(args.p_workspace,'workspace');return {data:[{id:'class',name:'Class A',workspace_id:'workspace',workspace_name:'School'}]};}
   if(name==='join_classroom_v3'){assert.equal(args.p_classroom,'class');assert.equal(args.p_password,'guest-secret');return {data:{id:'class',name:'Class A',workspace_id:'workspace',workspace_name:'School'}};}

@@ -162,7 +162,7 @@ Apply `202611110009_v2_plush_characters.sql` before deploying the V2 plush set. 
 
 ### Rooms V3 — Pass the Ball
 
-The home page selects Rooms V1, Rooms V2 or Pass the Ball, then Guest/Host. For V3 hosts, select a workspace from a dropdown and enter its host password, or create a workspace with a unique name and password. Room creation then lets the host reuse a classroom without entering its password, or choose New and set a classroom name and guest password. Room creation has no separate room password.
+The home page selects Rooms V1, Rooms V2 or Pass the Ball, then Guest/Host. V3 Guest mode uses its own persistent anonymous browser session, separate from Host/V1/V2 access, so selecting Guest is not blocked by having hosted earlier in that browser. For V3 hosts, select a workspace from a dropdown and enter its host password, or create a workspace with a unique name and password. Room creation then lets the host reuse a classroom without entering its password, or choose New and set a classroom name and guest password. Room creation has no separate room password.
 
 V3 guests select a workspace without its password. Its classroom dropdown loads automatically; the guest enters only the classroom password, then finds a room, enters a name and chooses a plush. Every version rejects a room of another type with “Room has other type: V1/V2/V3”. V3 also rejects a room from another classroom with “Room created for different classroom.” Both messages are translated in French, and the V3 backend enforces the classroom boundary even if the browser previously accessed other classrooms.
 

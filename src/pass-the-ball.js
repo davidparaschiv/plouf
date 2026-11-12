@@ -1,4 +1,4 @@
-import {rpc} from './api.js';
+import {rpc as callRpc} from './api.js';
 import {t,locale,errorText} from './i18n.js';
 import {roomCharacters} from './characters.js';
 import {validateQuestions} from './rules.js';
@@ -6,6 +6,8 @@ import {modeSwitch,setupQuizEntry} from './manual-entry.js';
 
 // The V3 controller owns its forms and polling; V1/V2 keep their existing renderer.
 export function createBallRooms({app,esc,avatar,music,setAtmosphere,onExit}) {
+ let role=null;
+ const rpc=(name,args)=>callRpc(name,args,role==='guest'?'v3-guest':'default');
  let workspace=null, classroom=null, classrooms=[], workspaceNames=[], options={classrooms:[],presets:[]}, room='', state=null, page='roles', creating=false, selected=40;
  let timer, epoch=0, signature='', positions=new Map(), previousHolder=null, pending=false, busy=false;
  let quizState={};
@@ -26,7 +28,7 @@ export function createBallRooms({app,esc,avatar,music,setAtmosphere,onExit}) {
  function roles(){
   app.innerHTML=`<section class="panel v3-form">${back()}<p class="eyebrow">${msg('Version')}</p><h2>${msg('Title')}</h2><div class="roles">${['guest','host'].map(role=>`<button class="role ${role==='host'?'host':''}" data-v3="${role}"><span class="symbol"><img src="${import.meta.env.BASE_URL}assets/role-${role}.png" alt=""></span><strong>${t(role)}</strong><small>${t(role+'Note')}</small><span class="arrow">↗</span></button>`).join('')}</div><p class="v3-error error" hidden></p></section>`;
  }
- function enter(linkRoom=''){dispose();workspace=null;classroom=null;classrooms=[];room=linkRoom;page='roles';creating=false;workspaceNames=[];music.setTrack('lobby');setAtmosphere('');draw();}
+ function enter(linkRoom=''){dispose();workspace=null;classroom=null;classrooms=[];room=linkRoom;page='roles';creating=false;workspaceNames=[];role=null;music.setTrack('lobby');setAtmosphere('');draw();}
  async function loadWorkspaces(){const generation=epoch;const result=await rpc('list_workspaces_v3',{});if(generation!==epoch)return false;workspaceNames=result.data;return true;}
  async function showWorkspace(){page='workspace';creating=false;workspaceForm();try{if(await loadWorkspaces())workspaceForm();}catch(e){showError(e);}}
  function workspaceForm(){
@@ -147,8 +149,8 @@ export function createBallRooms({app,esc,avatar,music,setAtmosphere,onExit}) {
   const action=e.target.closest('[data-v3]')?.dataset.v3;
   if(action==='back'){if(page==='roles'){dispose();onExit();}else if(page==='workspace'||page==='classroom'){page='roles';draw();}else if(page==='guest'){room='';await showGuestClassrooms();}else if(page==='host'){room='';await showWorkspace();}else await host();return;}
   if(action==='create-workspace'){creating=!creating;draw();return;}
-  if(action==='host'){await showWorkspace();return;}
-  if(action==='guest'){await showGuestClassrooms();return;}
+  if(action==='host'){role='host';await showWorkspace();return;}
+  if(action==='guest'){role='guest';await showGuestClassrooms();return;}
   if(action==='unlock'){page='unlock';draw();return;}
   if(action==='roles'){dispose();history.replaceState(null,'',location.pathname);room='';music.setTrack('lobby');setAtmosphere('');page='roles';draw();return;}
   if(action==='find'){const form=app.querySelector('[data-v3-form=join]');const id=`PID-${form.elements.room.value.replace(/\D/g,'')}`;try{form.querySelector('.v3-error').hidden=true;const info=await assertRoom(id,true);if(!info.can_join)throw Error('This room is not accepting guests.');form.querySelector('.v3-room-status').textContent=msg('RoomReady');}catch(error){form.querySelector('.v3-room-status').textContent='';showError(error);}return;}
