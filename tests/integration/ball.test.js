@@ -60,7 +60,7 @@ test('V3 workspace isolation, ball ownership, resets, classroom records and fina
  for(const [id,name,char] of [[a,'Alice',40],[b,'Bob',41]]){await as(id);await rpc('join_classroom_v3',[classA.id,'guest-secret']);await rpc('join_room_v3',[room,name,char,classA.id]);}
  await as(host);await rpc('control_room_v3',[room,'play']);
  let s=await rpc('snapshot_v3',[room]);assert.equal(s.phase,'question');assert.equal(s.question,'Un cœur ?');assert.equal(s.members.length,2);assert.deepEqual([...s.answer_colors].sort(),[0,1,2,3]);const colors=s.answer_colors;assert.deepEqual((await rpc('snapshot_v3',[room])).answer_colors,colors);
- const session=s.session_id,firstTurn=s.turn_id,holder=s.holder;
+ let session=s.session_id;const firstTurn=s.turn_id,holder=s.holder;
  const owner=s.members.find(m=>m.id===holder).name==='Alice'?a:b,other=owner===a?b:a;
  const correct=Number(s.correct_choice);
  await assert.rejects(rpc('answer_v3',[room,session,firstTurn,correct]),/Wait for the ball/);
@@ -76,12 +76,11 @@ test('V3 workspace isolation, ball ownership, resets, classroom records and fina
  await rpc('pass_ball_v3',[room,session,firstTurn,target]);
  await as(host);s=await rpc('snapshot_v3',[room]);assert.equal(s.question,'Second question');assert.notEqual(s.turn_id,firstTurn);
  await as(other);await rpc('answer_v3',[room,session,s.turn_id,(Number(s.correct_choice)+1)%4]);
- s=await rpc('snapshot_v3',[room]);assert.equal(s.phase,'restart');assert.equal(s.score,0);assert.equal(s.best_score,100);assert.equal(s.event,'wrong');
- await admin(`update private.rooms set deadline=clock_timestamp()-interval '1 second' where id='${room}'`);
- await as(host);s=await rpc('snapshot_v3',[room]);assert.equal(s.question,'Un cœur ?');assert.equal(s.event,'random');assert.equal(s.question_index,0);
- await admin(`update private.rooms set deadline=clock_timestamp()-interval '1 second' where id='${room}'`);
- s=await rpc('snapshot_v3',[room]);assert.equal(s.phase,'restart');assert.equal(s.event,'timeout');
- await admin(`update private.rooms set deadline=clock_timestamp()-interval '1 second' where id='${room}'`);
+ s=await rpc('snapshot_v3',[room]);assert.equal(s.phase,'finished');assert.equal(s.score,0);assert.equal(s.best_score,100);
+ // Start a fresh run and complete both questions; previous record remains.
+ await as(host);await rpc('control_room_v3',[room,'start']);
+ for(const [id,name]of [[a,'Alice'],[b,'Bob']]){await as(id);await rpc('join_room_v3',[room,name,40,classA.id]);}
+ await as(host);await rpc('control_room_v3',[room,'play']);session=(await rpc('snapshot_v3',[room])).session_id;
  // Complete both questions and finish automatically; best survives later resets.
  for(let i=0;i<2;i++){
   await as(host);s=await rpc('snapshot_v3',[room]);const who=s.members.find(m=>m.id===s.holder).name==='Alice'?a:b;
@@ -106,6 +105,22 @@ test('V3 workspace isolation, ball ownership, resets, classroom records and fina
  await as(host);assert.equal((await rpc('snapshot_v3',[replay])).best_score,200);
  await admin("update private.classrooms_v3 set name='Aardvark',best_score=200,best_reached_at=clock_timestamp()+interval '1 second' where name='Classe B'");
  const tied=await rpc('snapshot_v3',[replay]);assert.deepEqual(tied.ranking.map(c=>c.name),['Classe A','Aardvark'],'Earlier achievement wins a tie regardless of classroom name');
+ // Wrong non-final answer and timeout both advance; a failed last question finishes.
+ const failureQuestions=JSON.parse(qs).concat({Q:'Third question',C:'Correct',W1:'A',W2:'B',W3:'D'});
+ const failureRoom=await rpc('create_room_v3',[w.id,classA.id,null,null,'Failure flow',JSON.stringify(failureQuestions)]);
+ await rpc('control_room_v3',[failureRoom,'start']);
+ for(const [id,name]of [[a,'Alice'],[b,'Bob']]){await as(id);await rpc('join_room_v3',[failureRoom,name,40,classA.id]);}
+ await as(host);await rpc('control_room_v3',[failureRoom,'play']);
+ let turn=await rpc('snapshot_v3',[failureRoom]);await as(turn.members.find(m=>m.id===turn.holder).name==='Alice'?a:b);
+ await rpc('answer_v3',[failureRoom,turn.session_id,turn.turn_id,(Number(turn.correct_choice)+1)%4]);
+ turn=await rpc('snapshot_v3',[failureRoom]);assert.equal(turn.phase,'restart');assert.equal(turn.question_index,1);assert.equal(turn.score,0);
+ await admin(`update private.rooms set deadline=clock_timestamp()-interval '1 second' where id='${failureRoom}'`);
+ await as(host);turn=await rpc('snapshot_v3',[failureRoom]);assert.equal(turn.question,'Second question');assert.equal(turn.event,'random');
+ await admin(`update private.rooms set deadline=clock_timestamp()-interval '1 second' where id='${failureRoom}'`);
+ turn=await rpc('snapshot_v3',[failureRoom]);assert.equal(turn.phase,'restart');assert.equal(turn.event,'timeout');assert.equal(turn.question_index,2);
+ await admin(`update private.rooms set deadline=clock_timestamp()-interval '1 second' where id='${failureRoom}'`);
+ turn=await rpc('snapshot_v3',[failureRoom]);assert.equal(turn.question,'Third question');await as(turn.members.find(m=>m.id===turn.holder).name==='Alice'?a:b);
+ await rpc('answer_v3',[failureRoom,turn.session_id,turn.turn_id,(Number(turn.correct_choice)+1)%4]);assert.equal((await rpc('snapshot_v3',[failureRoom])).phase,'finished');
  await as(outsider);assert.equal((await rpc('access_workspace_v3',['École A','host-secret',false])).id,w.id);
  await assert.rejects(rpc('unlock_host_v3',[foreignRoom]),/Classroom access/);
  await assert.rejects(rpc('snapshot_v3',[foreignRoom]),/Classroom access/);
