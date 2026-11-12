@@ -21,6 +21,7 @@ test('V3 workspace isolation, ball ownership, resets, classroom records and fina
  const host='00000000-0000-0000-0000-000000000001',a='00000000-0000-0000-0000-000000000002',b='00000000-0000-0000-0000-000000000003',outsider='00000000-0000-0000-0000-000000000004';
  const as=async id=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec('set role authenticated');};
  const rpc=async(name,args)=>(await db.query(`select public.${name}(${args.map((_,i)=>'$'+(i+1)).join(',')}) as value`,args)).rows[0].value;
+ const record=async name=>{await db.exec('reset role');const result=(await db.query('select best_score,best_reached_at::text as reached from private.classrooms_v3 where name=$1',[name])).rows[0];await db.exec('set role authenticated');return result;};
  const admin=async sql=>{await db.exec('reset role');await db.exec(sql);await db.exec('set role authenticated');};
  await as(host);
  const w=await rpc('access_workspace_v3',['École A',null,true,'guest-secret','host-secret']);
@@ -54,7 +55,7 @@ test('V3 workspace isolation, ball ownership, resets, classroom records and fina
  await as(owner);let own=await rpc('snapshot_v3',[room]);assert.equal(own.correct_choice,null);assert.equal(own.question,'Un cœur ?');
  await rpc('answer_v3',[room,session,firstTurn,correct]);
  await assert.rejects(rpc('answer_v3',[room,session,firstTurn,correct]),/closed/);
- s=await rpc('snapshot_v3',[room]);assert.equal(s.score,100);assert.equal(s.best_score,100);assert.equal(s.phase,'passing');assert.equal(s.deadline,null);
+ s=await rpc('snapshot_v3',[room]);assert.equal(s.score,100);assert.equal(s.best_score,100);assert.equal(s.phase,'passing');assert.equal(s.deadline,null);const firstRecord=await record('Classe A');
  await assert.rejects(rpc('pass_ball_v3',[room,session,firstTurn,holder]),/another player/);
  const target=s.members.find(m=>m.id!==holder).id;
  await rpc('pass_ball_v3',[room,session,firstTurn,target]);
@@ -72,12 +73,23 @@ test('V3 workspace isolation, ball ownership, resets, classroom records and fina
   await as(who);await rpc('answer_v3',[room,session,s.turn_id,Number(s.correct_choice)]);
   if(i===0){const p=await rpc('snapshot_v3',[room]);await rpc('pass_ball_v3',[room,session,p.turn_id,p.members.find(m=>m.id!==p.holder).id]);}
  }
- s=await rpc('snapshot_v3',[room]);assert.equal(s.phase,'finished');assert.equal(s.playing,false);assert.equal(s.started,false);assert.equal(s.best_score,200);assert.equal(s.ranking[0].points,200);
+ s=await rpc('snapshot_v3',[room]);assert.equal(s.phase,'finished');assert.equal(s.playing,false);assert.equal(s.started,false);assert.equal(s.best_score,200);assert.equal(s.ranking[0].points,200);const higherRecord=await record('Classe A');assert.notEqual(higherRecord.reached,firstRecord.reached);
  await as(host);opts=await rpc('workspace_options_v3',[w.id]);
  const room2=await rpc('create_room_v3',[w.id,null,'Classe B',opts.presets[0].id,null,null]);
  await rpc('control_room_v3',[room2,'finish']);const final=await rpc('snapshot_v3',[room2]);assert.equal(final.ranking.length,2);assert.equal(final.ranking[0].name,'Classe A');
  const replay=await rpc('create_room_v3',[w.id,opts.classrooms[0].id,null,opts.presets[0].id,null,null]);
- await rpc('control_room_v3',[replay,'finish']);assert.equal((await rpc('snapshot_v3',[replay])).best_score,200);
+ await rpc('control_room_v3',[replay,'start']);
+ for(const [id,name]of [[a,'Alice'],[b,'Bob']]){await as(id);await rpc('join_room_v3',[replay,name,40]);}
+ await as(host);await rpc('control_room_v3',[replay,'play']);
+ for(let i=0;i<2;i++){
+  await as(host);const turn=await rpc('snapshot_v3',[replay]);await as(turn.members.find(m=>m.id===turn.holder).name==='Alice'?a:b);
+  await rpc('answer_v3',[replay,turn.session_id,turn.turn_id,Number(turn.correct_choice)]);
+  if(i===0)await rpc('pass_ball_v3',[replay,turn.session_id,turn.turn_id,turn.members.find(m=>m.id!==turn.holder).id]);
+ }
+ assert.equal((await record('Classe A')).reached,higherRecord.reached,'Tying a record must preserve its original achievement time');
+ await as(host);assert.equal((await rpc('snapshot_v3',[replay])).best_score,200);
+ await admin("update private.classrooms_v3 set name='Aardvark',best_score=200,best_reached_at=clock_timestamp()+interval '1 second' where name='Classe B'");
+ const tied=await rpc('snapshot_v3',[replay]);assert.deepEqual(tied.ranking.map(c=>c.name),['Classe A','Aardvark'],'Earlier achievement wins a tie regardless of classroom name');
  await as(outsider);assert.equal((await rpc('access_workspace_v3',['École A','host-secret',false])).role,'host');
  await rpc('unlock_host_v3',[room2]);assert.equal((await rpc('snapshot_v3',[room2])).host,true);
  // Server-enforced roster limit and plush-only characters.

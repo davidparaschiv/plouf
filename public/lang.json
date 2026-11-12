@@ -273,7 +273,8 @@
     "v3Version": "Rooms V3",
     "v3GuestPassword": "Guest password",
     "v3HostPassword": "Host password",
-    "v3DifferentPasswords": "Use different passwords for guests and hosts."
+    "v3DifferentPasswords": "Use different passwords for guests and hosts.",
+    "v3CurrentScore": "Current game score"
   },
   "frr": {
     "header": "un peu de compétition entre amis",
@@ -549,6 +550,7 @@
     "v3Version": "Salles V3",
     "v3GuestPassword": "Mot de passe invité",
     "v3HostPassword": "Mot de passe hôte",
-    "v3DifferentPasswords": "Choisissez des mots de passe différents pour les invités et les hôtes."
+    "v3DifferentPasswords": "Choisissez des mots de passe différents pour les invités et les hôtes.",
+    "v3CurrentScore": "Score de cette partie"
   }
 }
