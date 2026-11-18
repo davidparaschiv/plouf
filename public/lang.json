@@ -283,7 +283,11 @@
     "v3ClassroomWrong": "The classroom password is incorrect.",
     "otherRoomType": "Room has other type: {type}",
     "v3OtherClassroom": "Room created for different classroom.",
-    "v3RoomReady": "Your room is ready."
+    "v3RoomReady": "Your room is ready.",
+    "answerCorrect": "Correct!",
+    "answerWrong": "Wrong!",
+    "scoreReset": "Reset to 0",
+    "v3AnswersHidden": "Answers hidden while your teammate plays"
   },
   "frr": {
     "header": "un peu de compétition entre amis",
@@ -569,6 +573,10 @@
     "v3ClassroomWrong": "Le mot de passe de la classe est incorrect.",
     "otherRoomType": "La salle est d’un autre type : {type}",
     "v3OtherClassroom": "Cette salle a été créée pour une autre classe.",
-    "v3RoomReady": "Votre salle est prête."
+    "v3RoomReady": "Votre salle est prête.",
+    "answerCorrect": "Bonne réponse !",
+    "answerWrong": "Mauvaise réponse !",
+    "scoreReset": "Remis à 0",
+    "v3AnswersHidden": "Réponses masquées pendant le tour de votre camarade"
   }
 }

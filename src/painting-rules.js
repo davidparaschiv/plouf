@@ -38,7 +38,7 @@ export class PaintingDemo {
   const correct=answer!==undefined,key=correct?itemKey(answer):text;
   if(correct?this.found.has(key):this.wrong.has(key))return {correct,duplicate:true,points:this.score};
   if(this.complete)return null;
-  (correct?this.found:this.wrong).add(key);this.score+=correct?500:-100;
+  (correct?this.found:this.wrong).add(key);this.score=Math.max(0,this.score+(correct?500:-100));
   return {correct,duplicate:false,points:this.score};
  }
 }

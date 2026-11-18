@@ -1,8 +1,9 @@
+import {t} from './i18n.js';
 // Render text as native DOM so it stays crisp on high-density phone screens.
-export function showPointsFeedback(correct,scene,reduced=false) {
+export function showPointsFeedback(correct,scene,reduced=false,reset=false) {
  const layer=document.createElement('div');layer.className='points-notice';
  layer.setAttribute('role','status');
- layer.innerHTML=`<div class="points-notice-card ${correct?'points-positive':'points-negative'}"><span class="points-notice-icon" aria-hidden="true">${correct?'✓':'×'}</span><strong>${correct?'+500 p':'−100 p'}</strong></div>`;
+ layer.innerHTML=`<div class="points-notice-card ${correct?'points-positive':'points-negative'}"><span class="points-notice-icon" aria-hidden="true">${correct?'✓':'×'}</span><strong>${correct?'+500 p':reset?t('scoreReset'):'−100 p'}</strong></div>`;
  (document.querySelector('dialog[open]')||document.body).append(layer);
  const card=layer.firstElementChild;
  if(reduced){setTimeout(()=>layer.remove(),1200);return;}

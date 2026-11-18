@@ -111,7 +111,7 @@ export async function openPaintingDemo(form,{esc,music,audioToggle,itemReward,av
    e.preventDefault();e.stopPropagation();if(locked)return;
    const result=game.guess(e.target.querySelector('input').value);
    if(!result||result.duplicate){e.target.querySelector('input').value='';return;}
-   itemReward(result.correct);
+   itemReward(result.correct,!result.correct&&result.points===0);
    if(found.size===draft.items.length){locked=true;draw();dialog.querySelectorAll('form input,form button').forEach(el=>el.disabled=true);delay=setTimeout(podium,1400);}else draw();
   };
   sound();dialog.querySelector('input').focus();

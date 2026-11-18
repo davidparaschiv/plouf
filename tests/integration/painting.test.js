@@ -40,6 +40,8 @@ test('V1 and V2 database lifecycle, authorization, Unicode, scoring and finish',
  assert.equal(s.guest_count,2);assert.equal(s.found_items.length,0);
  await assert.rejects(db.query('select * from private.paintings'),/permission denied/);
  await assert.rejects(rpc('room_snapshot_v1',[room]),/permission denied/);
+ let floor=await rpc('submit_item',[room,session,'wrong at zero']);assert.equal(floor.points,0);
+ for(let i=0;i<3;i++){floor=await rpc('submit_item',[room,session,'another wrong '+i]);assert.equal(floor.points,0);}
  let r=await rpc('submit_item',[room,session,' \tUN\u00a0 COEUR  ']);assert.equal(r.points,500);assert.equal(r.correct,true);
  r=await rpc('submit_item',[room,session,'un cœur']);assert.equal(r.duplicate,true);assert.equal(r.points,500);
  r=await rpc('submit_item',[room,session,'not present']);assert.equal(r.points,400);

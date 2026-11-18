@@ -74,7 +74,7 @@ test('V2 database and demo agree on exact Unicode, ASCII fallback, duplicates an
   const expected=demo.guess(guess),actual=await rpc('submit_item',[room,state.session_id,guess]);
   assert.deepEqual(actual,expected,guess);
  }
- const result=await rpc('room_snapshot',[room]);assert.equal(result.phase,'finished');assert.equal(result.members[0].points,demo.score);assert.equal(demo.score,2500);
+ const result=await rpc('room_snapshot',[room]);assert.equal(result.phase,'finished');assert.equal(result.members[0].points,demo.score);assert.equal(demo.score,2600);
  // Finish as soon as every guest has found every item, without waiting for the timer.
  await as(host);
  const quickPreset=(await rpc('painting_presets',[])).find(p=>p.description==='Duration 30');
@@ -94,7 +94,7 @@ test('V2 database and demo agree on exact Unicode, ASCII fallback, duplicates an
  await rpc('submit_item',[multiplayer,active.session_id,'item']);
  const finished=await rpc('room_snapshot',[multiplayer]);
  assert.equal(finished.phase,'finished');assert.equal(finished.playing,false);assert.equal(finished.started,false);
- assert.equal(finished.members.length,2);assert.equal(finished.members[0].points,500);assert.equal(finished.members[1].points,400);
+ assert.equal(finished.members.length,2);assert.equal(finished.members[0].points,500);assert.equal(finished.members[1].points,500);
  // Personal missed-word review is private until the timer ends.
  await as(host);const reviewRoom=await rpc('create_room_from_preset',[frenchPreset.id,'pass']);await rpc('start_room',[reviewRoom]);
  await as(guest);await rpc('join_room',[reviewRoom,'Alice',40]);

@@ -651,7 +651,7 @@ async function submitItem(form) {
     if (roomId !== id || snapshot.session_id !== session) return;
     input.value = '';
     if (!data.duplicate) {
-      itemReward(data.correct);
+      itemReward(data.correct,!data.correct&&data.points===0);
     } else toast(t('itemRepeated'));
     await poll();
   } catch(error) { toast(errorText(error)); }

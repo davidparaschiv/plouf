@@ -28,3 +28,16 @@ test('points feedback uses crisp DOM text, keeps the 1.2 second timing, and work
   Object.assign(globalThis,before);dom.window.close();
  }
 });
+
+test('zero-floor feedback is localized instead of displaying a negative penalty',async()=>{
+ const {setLanguage}=await import('../src/i18n.js');
+ const dom=new JSDOM('<body></body>');const before={document:globalThis.document,window:globalThis.window};
+ globalThis.document=dom.window.document;globalThis.window=dom.window;
+ try{
+  for(const [lang,label]of [['en','Reset to 0'],['frr','Remis à 0']]){
+   setLanguage(lang);showPointsFeedback(false,{tweens:{add(){}}},false,true);
+   assert.equal(document.querySelector('.points-negative strong').textContent,label);
+   document.querySelector('.points-notice').remove();
+  }
+ }finally{setLanguage('en');Object.assign(globalThis,before);dom.window.close();}
+});

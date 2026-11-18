@@ -176,6 +176,6 @@ export function reward(place) {
 }
 
 // V2 feedback lives in the upper part of the screen, away from the painting.
-export function itemReward(correct) {
-  showPointsFeedback(correct,scene,reduced);
+export function itemReward(correct,reset=false) {
+  showPointsFeedback(correct,scene,reduced,reset);
 }

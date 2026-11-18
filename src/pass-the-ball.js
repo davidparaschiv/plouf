@@ -1,3 +1,4 @@
+import {showAnswerFeedback} from './answer-feedback.js';
 import {rpc as callRpc} from './api.js';
 import {t,locale,errorText} from './i18n.js';
 import {roomCharacters} from './characters.js';
@@ -9,6 +10,7 @@ export function createBallRooms({app,esc,avatar,music,setAtmosphere,onExit}) {
  let role=null;
  const rpc=(name,args)=>callRpc(name,args,role==='guest'?'v3-guest':'default');
  let workspace=null, classroom=null, classrooms=[], workspaceNames=[], options={classrooms:[],presets:[]}, room='', state=null, page='roles', creating=false, selected=40;
+ let lastFeedback=null;
  let timer, epoch=0, signature='', positions=new Map(), previousHolder=null, pending=false, busy=false;
  let quizState={};
  let draft={classroom:'',classroomName:'',preset:'',presetName:'',questions:null,fileName:''};
@@ -24,7 +26,7 @@ export function createBallRooms({app,esc,avatar,music,setAtmosphere,onExit}) {
  function showError(error){const el=app.querySelector('.v3-error');if(el){el.textContent=errorMessage(error);el.hidden=false;}}
  const field=(label,name,extra='')=>`<label>${label}<input name="${name}" ${extra.includes('type=')?'':'type="text"'} ${extra}></label>`;
  const back=()=>`<button type="button" class="back" data-v3="back">${t('back')}</button>`;
- function dispose(){clearTimeout(timer);epoch++;state=null;signature='';positions.clear();previousHolder=null;document.body.classList.remove('room-v3','podium');}
+ function dispose(){lastFeedback=null;document.querySelectorAll('.answer-result-notice').forEach(el=>el.remove());clearTimeout(timer);epoch++;state=null;signature='';positions.clear();previousHolder=null;document.body.classList.remove('room-v3','podium');}
  function roles(){
   app.innerHTML=`<section class="panel v3-form">${back()}<p class="eyebrow">${msg('Version')}</p><h2>${msg('Title')}</h2><div class="roles">${['guest','host'].map(role=>`<button class="role ${role==='host'?'host':''}" data-v3="${role}"><span class="symbol"><img src="${import.meta.env.BASE_URL}assets/role-${role}.png" alt=""></span><strong>${t(role)}</strong><small>${t(role+'Note')}</small><span class="arrow">↗</span></button>`).join('')}</div><p class="v3-error error" hidden></p></section>`;
  }
@@ -93,16 +95,23 @@ export function createBallRooms({app,esc,avatar,music,setAtmosphere,onExit}) {
   return msg('Waiting');
  }
  function render(force=false){
-  const s=state;document.body.classList.add('room-v3');document.body.classList.remove('themed','room-v2','v2-results');
+  const s=state;
+  if(s.feedback?.id&&s.feedback.id!==lastFeedback){lastFeedback=s.feedback.id;const age=Date.now()+(s.offset||0)-Date.parse(s.feedback.at);if(age>=-1000&&age<8000)showAnswerFeedback(s.feedback.correct);}
+  document.body.classList.add('room-v3');document.body.classList.remove('themed','room-v2','v2-results');
   const finished=s.phase==='finished';document.body.classList.toggle('podium',finished);setAtmosphere(finished?'confetti':'');music.setTrack(finished?'podium':s.started?'forest':'lobby');
   const nextSignature=JSON.stringify([locale(),s.phase,s.turn_id,s.event_id,s.host,s.member_id,s.members,s.ranking,s.best_score,s.score]);
   if(force||nextSignature!==signature){
    signature=nextSignature;
    if(finished){renderResults();return;}
-   app.innerHTML=`<section class="v3-game"><div class="v3-game-head"><div class="v3-glass"><p class="eyebrow">${esc(room)}</p><h1>${msg('Title')}</h1></div><div class="v3-stats"><div class="v3-stat"><small>${esc(s.classroom)}</small><strong>${s.best_score} <span>p</span></strong><small>${msg('Best')}</small></div><div class="v3-stat"><small>${msg('Score')}</small><strong>${s.score} <span>p</span></strong></div></div></div><p class="v3-announcement v3-glass" role="status">${esc(announcement())}</p>${s.phase==='question'?`<div class="v3-question v3-glass"><div class="v3-question-head"><span>${s.question_index+1} / ${s.question_count}</span><strong class="v3-timer" aria-label="${msg('TimeLeft')}"></strong></div>${s.question?`<h2>${esc(s.question)}</h2><div class="answers">${s.answers.map((a,i)=>`<button class="answer ${s.host?(i===Number(s.correct_choice)?'is-correct':'is-incorrect'):''}" data-v3-color="${s.answer_colors?.[i]??i}" data-v3-answer="${i}" ${s.host?'disabled':''}><span class="answer-copy">${esc(a)}</span></button>`).join('')}</div>`:`<p>${msg('Watch')}</p>`}</div>`:''}${board()}<div class="room-actions">${s.host? s.playing?`<button class="secondary" data-v3="finish">${msg('Finish')}</button>`:`<button class="primary" data-v3="${s.started?'play':'start'}" ${s.started&&s.members.length<2?'disabled':''}>${t(s.started?'play':'start')}</button>${s.started?`<button class="secondary" data-v3="start">${t('reset')}</button>`:''}`:''}</div><p class="v3-count">${s.members.length} / 30 · ${t('guestsCount',{count:s.members.length})}</p>${s.host?`<div class="share v3-glass"><input type="text" aria-label="${msg('RoomLink')}" readonly value="${esc(location.href)}"><button class="secondary" data-v3="copy">${t('copy')}</button></div>`:''}<p class="v3-error error" hidden role="alert"></p></section>`;
+   app.innerHTML=`<section class="v3-game"><div class="v3-game-head"><div class="v3-glass"><p class="eyebrow">${esc(room)}</p><h1>${msg('Title')}</h1></div><div class="v3-stats"><div class="v3-stat"><small>${esc(s.classroom)}</small><strong>${s.best_score} <span>p</span></strong><small>${msg('Best')}</small></div><div class="v3-stat"><small>${msg('Score')}</small><strong>${s.score} <span>p</span></strong></div></div></div><p class="v3-announcement v3-glass" role="status">${esc(announcement())}</p>${s.phase==='question'?`<div class="v3-question v3-glass"><div class="v3-question-head"><span>${s.question_index+1} / ${s.question_count}</span><strong class="v3-timer" aria-label="${msg('TimeLeft')}"></strong></div>${s.question?`<h2>${esc(s.question)}</h2><div class="answers">${answerChoices()}</div>`:`<p>${msg('Watch')}</p>`}</div>`:''}${board()}<div class="room-actions">${s.host? s.playing?`<button class="secondary" data-v3="finish">${msg('Finish')}</button>`:`<button class="primary" data-v3="${s.started?'play':'start'}" ${s.started&&s.members.length<2?'disabled':''}>${t(s.started?'play':'start')}</button>${s.started?`<button class="secondary" data-v3="start">${t('reset')}</button>`:''}`:''}</div><p class="v3-count">${s.members.length} / 30 · ${t('guestsCount',{count:s.members.length})}</p>${s.host?`<div class="share v3-glass"><input type="text" aria-label="${msg('RoomLink')}" readonly value="${esc(location.href)}"><button class="secondary" data-v3="copy">${t('copy')}</button></div>`:''}<p class="v3-error error" hidden role="alert"></p></section>`;
    animateBall();
   }
   updateClock();
+ }
+ function answerChoices(){
+  const s=state;
+  if(!s.host&&s.member_id!==s.holder)return Array.from({length:4},(_,i)=>`<button type="button" class="answer v3-hidden-answer" data-v3-color="${s.answer_colors?.[i]??i}" disabled aria-label="${msg('AnswersHidden')}"><span class="answer-copy" aria-hidden="true">••••••••••••</span></button>`).join('');
+  return (s.answers||[]).map((a,i)=>`<button class="answer ${s.host?(i===Number(s.correct_choice)?'is-correct':'is-incorrect'):''}" data-v3-color="${s.answer_colors?.[i]??i}" data-v3-answer="${i}" ${s.host?'disabled':''}><span class="answer-copy">${esc(a)}</span></button>`).join('');
  }
  function updateClock(){const el=app.querySelector('.v3-timer');if(el&&state?.deadline)el.textContent=`${Math.max(0,Math.ceil((Date.parse(state.deadline)-Date.now()-state.offset)/1000))} s`;}
  function animateBall(){

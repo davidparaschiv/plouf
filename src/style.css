@@ -1400,3 +1400,13 @@ img.v3-ball{width:34px;height:34px;background:none;border:0;border-radius:50%;bo
 @keyframes v3-player-sway{0%,100%{transform:rotate(-15deg)}50%{transform:rotate(15deg)}}
 .v3-arena.is-playing .v3-player:not(:disabled):hover .avatar{transform:none;animation-name:v3-player-sway}
 @media(prefers-reduced-motion:reduce){.v3-arena .plush-avatar{animation:none}}
+
+.answer-result-notice { position:fixed; z-index:110; bottom:calc(26px + env(safe-area-inset-bottom,0px)); left:50%; display:flex; align-items:center; justify-content:center; gap:14px; width:max-content; max-width:calc(100vw - 32px); padding:18px 28px; border:2px solid #ffffffde; border-radius:30px 30px 22px 22px; background:linear-gradient(130deg,#edfff8,#a8efd4); box-shadow:0 12px 42px #101a4660,inset 0 1px 0 #fff; color:var(--pink); pointer-events:none; animation:answer-result-rise 2.2s cubic-bezier(.2,.8,.2,1) both; }
+.answer-result-notice.is-wrong { background:linear-gradient(130deg,#fff0f6,#f1c9de); }
+.answer-result-notice strong { font-family:Nunito,sans-serif; font-size:clamp(24px,6vw,36px); font-weight:900; line-height:1.15; text-align:center; }
+.answer-result-emoji { font-size:36px; line-height:1; }
+@keyframes answer-result-rise { 0% { transform:translate(-50%,calc(100% + 50px)) scale(.88); opacity:0; } 20%,78% { transform:translate(-50%,0) scale(1); opacity:1; } 100% { transform:translate(-50%,-24px) scale(.97); opacity:0; } }
+@media(prefers-reduced-motion:reduce) { .answer-result-notice { animation-name:answer-result-fade; } }
+@keyframes answer-result-fade { 0%,100% { transform:translateX(-50%); opacity:0; } 12%,85% { transform:translateX(-50%); opacity:1; } }
+.v3-hidden-answer .answer-copy { filter:blur(12px); opacity:.65; user-select:none; pointer-events:none; letter-spacing:3px; }
+.v3-hidden-answer:disabled { cursor:default; }

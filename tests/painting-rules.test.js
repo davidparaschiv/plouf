@@ -20,13 +20,13 @@ test('painting demo uses the whole answer list, handles duplicates and restarts 
  const {PaintingDemo,validateDescription}=await import('../src/painting-rules.js');
  const items=Array.from({length:20},(_,i)=>`item ${i}`);
  const demo=new PaintingDemo(items);
- assert.equal(demo.guess('wrong').points,-100);
+ assert.equal(demo.guess('wrong').points,0);
  assert.equal(demo.guess('wrong').duplicate,true);
  for(let i=0;i<20;i++){
   assert.equal(demo.complete,false);
   demo.guess(`  ITEM   ${i} `);
  }
- assert.equal(demo.complete,true);assert.equal(demo.score,9900);
+ assert.equal(demo.complete,true);assert.equal(demo.score,10000);
  assert.equal(demo.guess('item 0').duplicate,true);
  const restarted=new PaintingDemo(items);
  assert.equal(restarted.found.size,0);assert.equal(restarted.score,0);assert.equal(restarted.complete,false);
@@ -49,14 +49,14 @@ test('ASCII-only guesses can omit accents; Unicode guesses require exact accents
 
 test('demo wrong accents lose points without blocking valid answers or awarding repeats',()=>{
  const demo=new PaintingDemo(['café','cœur','ecole']);
- assert.deepEqual(demo.guess('cafè'),{correct:false,duplicate:false,points:-100});
+ assert.deepEqual(demo.guess('cafè'),{correct:false,duplicate:false,points:0});
  assert.equal(demo.guess(' CAFÈ ').duplicate,true);
- assert.deepEqual(demo.guess('café'),{correct:true,duplicate:false,points:400});
- assert.equal(demo.guess('cafe').duplicate,true);assert.equal(demo.score,400);
- assert.deepEqual(demo.guess('cafê'),{correct:false,duplicate:false,points:300});
- assert.equal(demo.guess('coeur').points,800);assert.equal(demo.guess('cœur').duplicate,true);
- assert.deepEqual(demo.guess('école'),{correct:false,duplicate:false,points:700});
- assert.equal(demo.guess('ecole').points,1200);assert.equal(demo.complete,true);
+ assert.deepEqual(demo.guess('café'),{correct:true,duplicate:false,points:500});
+ assert.equal(demo.guess('cafe').duplicate,true);assert.equal(demo.score,500);
+ assert.deepEqual(demo.guess('cafê'),{correct:false,duplicate:false,points:400});
+ assert.equal(demo.guess('coeur').points,900);assert.equal(demo.guess('cœur').duplicate,true);
+ assert.deepEqual(demo.guess('école'),{correct:false,duplicate:false,points:800});
+ assert.equal(demo.guess('ecole').points,1300);assert.equal(demo.complete,true);
 });
 
 test('object themes are required, keep accents and capitalization, and allow at most four words',async()=>{
